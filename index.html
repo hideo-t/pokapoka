@@ -211,7 +211,7 @@
   <section id="screen-email" class="card">
     <h2>はじめての方・ログイン</h2>
     <p>ごれんらく先のメールアドレスをにゅうりょくしてください。</p>
-    <p class="muted">にんしょうコード（6けた）をおくります。</p>
+    <p class="muted">にんしょうコード（6けた）をおくります。<br>いちどログインすると <strong>30にちかん</strong> じどうログインします。</p>
     <label for="emailInput">メールアドレス</label>
     <input id="emailInput" type="email" placeholder="example@mail.com" autocomplete="email">
     <div id="emailMsg"></div>
@@ -654,7 +654,7 @@ async function onVerifyOTP() {
         email: email,
         tenantId: TENANT_ID,
         isAdmin: !!r.isAdmin,
-        expiry: Date.now() + 60 * 60 * 1000
+        expiry: Date.now() + 30 * 24 * 60 * 60 * 1000  // 30日 (スマホ自動ログイン用)
       });
       showMsg('otpMsg', 'にんしょうにせいこうしました！', 'ok');
       setTimeout(() => showAuthenticated(), 500);
