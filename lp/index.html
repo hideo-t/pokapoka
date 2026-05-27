@@ -134,10 +134,26 @@
     .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
     .hero-trust{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;color:var(--text-light);font-size:.85rem}
     .hero-trust span::before{content:'✓ ';color:var(--secondary);font-weight:900}
+    .cross-banner{
+      background:linear-gradient(90deg,#2C5282 0%,#4A90E2 100%);
+      color:#fff;padding:14px 22px;border-radius:12px;
+      max-width:880px;margin:28px auto 0;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      box-shadow:0 4px 14px rgba(44,82,130,.25);text-align:left;
+    }
+    .cross-banner .txt{font-size:.95rem;font-weight:500;flex:1;min-width:240px}
+    .cross-banner .txt strong{font-weight:800}
+    .cross-banner a.btn-x{
+      background:#fff;color:#2C5282;padding:10px 20px;border-radius:999px;
+      font-weight:800;font-size:.9rem;white-space:nowrap;
+      transition:transform .15s,background .15s,color .15s;
+    }
+    .cross-banner a.btn-x:hover{background:#FF7B47;color:#fff;transform:translateY(-1px)}
     @media (max-width:768px){
       .hero{padding:60px 0 50px}
       .hero h1{font-size:2rem;line-height:1.4}
       .hero-sub{font-size:1.05rem}
+      .cross-banner{flex-direction:column;text-align:center}
     }
 
     /* ========================================================
@@ -335,7 +351,7 @@
        11. フッター
        ======================================================== */
     footer{padding:60px 24px 30px;background:#2C3E50;color:#CBD5E1}
-    .ft-wrap{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
+    .ft-wrap{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:32px}
     .ft-brand .logo{color:#fff;margin-bottom:10px}
     .ft-mission{font-size:.9rem;line-height:1.7;color:#9CA3AF;margin-bottom:14px}
     .ft-col h5{color:#fff;font-size:.95rem;margin-bottom:10px;font-weight:700}
@@ -395,6 +411,10 @@
       <span>サーバー不要</span>
       <span>月額¥0プランあり</span>
       <span>いつでも解約OK</span>
+    </div>
+    <div class="cross-banner">
+      <div class="txt">🎓 <strong>このシステムを教える教室、運営しませんか？</strong><br><span style="opacity:.85;font-size:.85rem">パソコン教室向け AI教室FCパートナー募集中</span></div>
+      <a href="https://hideo-t.github.io/ai-school-fc/" target="_blank" rel="noopener" class="btn-x">教室パートナー募集を見る →</a>
     </div>
   </div>
 </section>
@@ -802,6 +822,13 @@
         <li><a href="https://line.me/R/ti/p/@533dgghw" target="_blank" rel="noopener">LINE @533dgghw</a></li>
         <li><a href="https://github.com/hideo-t/pokapoka" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="../?tenant=DEFAULT" target="_blank" rel="noopener">ぽかぽか食堂を見る</a></li>
+      </ul>
+    </div>
+    <div class="ft-col">
+      <h5>🎓 関連事業</h5>
+      <ul>
+        <li><a href="https://hideo-t.github.io/ai-school-fc/" target="_blank" rel="noopener"><strong>AI教室FCパートナー募集</strong></a></li>
+        <li style="font-size:.8rem;color:#94A3B8;line-height:1.5;padding-top:4px">このシステムを教えるパソコン教室を全国募集中。創業パートナー先着3校。</li>
       </ul>
     </div>
   </div>
