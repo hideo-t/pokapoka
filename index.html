@@ -367,10 +367,10 @@
   <!-- 共通 サイドメニュー -->
   <div id="menuOverlay" class="menu-overlay hidden" onclick="closeMenuIfBg(event)">
     <div class="menu-panel" onclick="event.stopPropagation()">
-      <button class="btn btn-secondary" onclick="goBookAgain()">📅 あたらしくよやく</button>
-      <button class="btn btn-secondary" onclick="goMyReservations()">📋 マイよやく</button>
-      <button class="btn btn-secondary hidden" id="adminMenuBtn" onclick="goAdmin()">🛠️ かんりダッシュボード</button>
-      <button class="btn btn-ghost" onclick="logout()">ログアウト</button>
+      <button class="btn btn-secondary" onclick="closeMenu();goBookAgain()">📅 あたらしくよやく</button>
+      <button class="btn btn-secondary" onclick="closeMenu();goMyReservations()">📋 マイよやく</button>
+      <button class="btn btn-secondary hidden" id="adminMenuBtn" onclick="closeMenu();goAdmin()">🛠️ かんりダッシュボード</button>
+      <button class="btn btn-ghost" onclick="closeMenu();logout()">ログアウト</button>
       <button class="btn btn-ghost btn-sm" onclick="closeMenu()">とじる</button>
     </div>
   </div>
