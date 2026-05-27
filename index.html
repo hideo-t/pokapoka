@@ -1127,8 +1127,12 @@ function renderResRow(res, canCancel) {
 }
 
 function formatYmdToday() {
+  // バックエンド _fmtDate と同じ yyyy/MM/dd 形式（先頭ゼロ付き）に揃える
+  // ※先頭ゼロが無いと文字列比較で '2026/05/30' >= '2026/5/28' が誤判定される
   const d = new Date();
-  return d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+  const mm = String(d.getMonth()+1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '/' + mm + '/' + dd;
 }
 
 async function onCancel(reservationId) {
