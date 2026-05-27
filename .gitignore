@@ -1,0 +1,20 @@
+# GAS バックエンドは公開しない
+gas/
+.clasp.json
+.claspignore
+appsscript.json
+
+# Claude Code 作業ファイル
+.claude/
+*.log
+.DS_Store
+Thumbs.db
+
+# ローカル設定
+.env
+.env.local
+.env.*.local
+
+# 機密扱いの内部ドキュメント
+docs/PRIVATE_*.md
+docs/STEP1_VERIFICATION.md

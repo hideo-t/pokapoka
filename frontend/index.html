@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>こども食堂 予約システム</title>
+  <style>
+    /* ============================================================
+       🎨 スタイル — スマホ最優先（max-width: 480px）
+       ライトグリーン × 温かいオレンジ
+       ============================================================ */
+    :root {
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --green-soft: #86efac;
+      --orange: #fb923c;
+      --orange-light: #ffedd5;
+      --bg: #fffdf7;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --err: #dc2626;
+      --err-bg: #fee2e2;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Hiragino Sans','Yu Gothic UI','Meiryo','Helvetica Neue',sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-text-size-adjust: 100%;
+    }
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 12px;
+      min-height: 100vh;
+    }
+    header.bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, var(--green), var(--green-soft));
+      border-radius: var(--radius);
+      color: #fff;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    }
+    header.bar h1 { font-size: 16px; margin: 0; font-weight: 800; letter-spacing: .04em; }
+    header.bar .menu-btn {
+      background: rgba(255,255,255,.2); color: #fff; border: 0;
+      padding: 6px 10px; border-radius: 8px; font-size: 14px;
+      cursor: pointer; font-weight: 700;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.04);
+      border: 1px solid var(--border);
+    }
+    .card h2 { font-size: 18px; margin: 0 0 10px; color: var(--green); }
+    .card p { margin: 6px 0; }
+    label { display: block; font-size: 14px; font-weight: 700; margin: 10px 0 4px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 12px;
+      font-size: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px var(--green-light);
+    }
+    textarea { resize: vertical; min-height: 64px; }
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px; font-weight: 800;
+      border: 0; border-radius: 12px;
+      cursor: pointer;
+      transition: transform .05s ease, opacity .15s;
+      font-family: inherit;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-primary { background: var(--orange); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #ea7c2c; }
+    .btn-secondary { background: var(--green); color: #fff; }
+    .btn-ghost { background: var(--green-light); color: var(--green); }
+    .btn-danger { background: var(--err); color: #fff; }
+    .btn-sm { padding: 8px 12px; font-size: 13px; }
+    .msg { padding: 10px 12px; border-radius: 10px; margin: 10px 0; font-size: 14px; }
+    .msg-err { background: var(--err-bg); color: var(--err); border: 1px solid #fecaca; }
+    .msg-ok { background: var(--green-light); color: var(--green); border: 1px solid #86efac; }
+    .msg-info { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    .spinner.dark { border-color: rgba(0,0,0,.1); border-top-color: var(--green); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+    .center { text-align: center; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .schedule-list { display: flex; flex-direction: column; gap: 8px; }
+    .schedule {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      background: #fff;
+      transition: all .15s;
+    }
+    .schedule:hover { border-color: var(--green-soft); }
+    .schedule.selected { border-color: var(--orange); background: var(--orange-light); }
+    .schedule.full { opacity: .5; cursor: not-allowed; background: #f3f4f6; }
+    .schedule .date { font-size: 17px; font-weight: 800; color: var(--green); }
+    .schedule .meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .schedule .badge {
+      display: inline-block;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+      margin-left: 6px;
+    }
+    .badge-ok { background: var(--green-light); color: var(--green); }
+    .badge-full { background: var(--err-bg); color: var(--err); }
+    .badge-closed { background: #f3f4f6; color: var(--muted); }
+    .summary-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin: 10px 0;
+    }
+    .summary-grid .cell {
+      background: var(--green-light); border-radius: 10px; padding: 10px;
+    }
+    .summary-grid .cell .lbl { font-size: 12px; color: var(--muted); }
+    .summary-grid .cell .val { font-size: 18px; font-weight: 800; color: var(--green); }
+    .res-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px; border-bottom: 1px solid var(--border);
+    }
+    .res-row:last-child { border-bottom: 0; }
+    .res-info .date { font-weight: 800; color: var(--green); }
+    .res-info .id { font-size: 11px; color: var(--muted); }
+    .menu-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.45); z-index: 100;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 60px 12px 12px;
+    }
+    .menu-panel {
+      background: #fff; border-radius: var(--radius);
+      width: 100%; max-width: 360px;
+      padding: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.2);
+    }
+    .menu-panel button { margin-bottom: 8px; }
+    .success-pop {
+      display: inline-block; font-size: 50px;
+      animation: pop .5s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .footer-note {
+      text-align: center; color: var(--muted); font-size: 11px;
+      padding: 12px 0;
+    }
+    table.admin-tbl {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    table.admin-tbl th, table.admin-tbl td {
+      border-bottom: 1px solid var(--border);
+      padding: 6px 4px; text-align: left;
+    }
+    table.admin-tbl th { background: var(--green-light); color: var(--green); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <header class="bar">
+    <h1>🍙 こども食堂よやく</h1>
+    <button class="menu-btn" onclick="openMenu()" id="menuBtn" style="display:none">☰</button>
+  </header>
+
+  <!-- ============================================================
+       📧 画面1: メール入力
+       ============================================================ -->
+  <section id="screen-email" class="card">
+    <h2>はじめての方・ログイン</h2>
+    <p>ごれんらく先のメールアドレスをにゅうりょくしてください。</p>
+    <p class="muted">にんしょうコード（6けた）をおくります。</p>
+    <label for="emailInput">メールアドレス</label>
+    <input id="emailInput" type="email" placeholder="example@mail.com" autocomplete="email">
+    <div id="emailMsg"></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" onclick="onSendOTP()" id="btnSendOTP">
+      <span id="btnSendOTPText">コードをおくる</span>
+    </button>
+    <div style="height:14px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="goPublicCalendar()">📅 にっていをみる（ログインなしでOK）</button>
+  </section>
+
+  <!-- ============================================================
+       🌍 画面0: 公開カレンダー（未認証OK・絵文字のみ）
+       ============================================================ -->
+  <section id="screen-public" class="card hidden">
+    <h2>かいさいびと こんざつじょうきょう</h2>
+    <p class="muted">よやくにはメールにんしょうがひつようです。</p>
+    <div id="publicList" class="schedule-list">
+      <div class="muted center">よみこみちゅう…</div>
+    </div>
+    <div style="height:12px"></div>
+    <button class="btn btn-primary" onclick="backFromPublic()">📧 メールにんしょうしてよやくする</button>
+  </section>
+
+  <!-- ============================================================
+       🔢 画面2: OTP入力
+       ============================================================ -->
+  <section id="screen-otp" class="card hidden">
+    <h2>にんしょうコード</h2>
+    <p>メールにとどいた <strong>6けた</strong> のコードをにゅうりょくしてください。</p>
+    <p class="muted">ゆうこうきげん: 10ぷん / メールがとどかないときは「めいわくメール」ホルダもごかくにん</p>
+    <label for="otpInput">コード</label>
+    <input id="otpInput" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="one-time-code" style="font-size:24px;letter-spacing:.3em;text-align:center">
+    <div id="otpMsg"></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" onclick="onVerifyOTP()" id="btnVerifyOTP">
+      <span id="btnVerifyOTPText">にんしょうする</span>
+    </button>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="backToEmail()">←メールをかえる</button>
+  </section>
+
+  <!-- ============================================================
+       📅 画面3: 予約フォーム
+       ============================================================ -->
+  <section id="screen-book" class="card hidden">
+    <h2>ごよやくフォーム</h2>
+    <div id="visitorBadge"></div>
+    <p>かいさいびをえらび、にんずうとおなまえをにゅうりょくしてください。</p>
+
+    <label>かいさいび</label>
+    <div id="scheduleList" class="schedule-list">
+      <div class="muted center">よみこみちゅう…</div>
+    </div>
+
+    <label for="nameInput">おなまえ</label>
+    <input id="nameInput" type="text" placeholder="やまだ たろう" autocomplete="name">
+
+    <label for="phoneInput">でんわばんごう（にんい）</label>
+    <input id="phoneInput" type="tel" placeholder="090-0000-0000" autocomplete="tel">
+
+    <div class="row">
+      <div>
+        <label for="adultInput">おとな</label>
+        <input id="adultInput" type="number" min="0" max="20" value="1">
+      </div>
+      <div>
+        <label for="childInput">こども</label>
+        <input id="childInput" type="number" min="0" max="20" value="1">
+      </div>
+    </div>
+
+    <label for="allergyInput">アレルギー・きをつけたいこと（にんい）</label>
+    <textarea id="allergyInput" placeholder="たまご・小麦・乳製品など"></textarea>
+
+    <div id="sourceWrap">
+      <label for="sourceInput">どこでしりましたか？（にんい）</label>
+      <select id="sourceInput">
+        <option value="">えらばない</option>
+        <option value="口コミ">口コミ・しょうかい</option>
+        <option value="SNS">SNS（LINE/X/Instagram など）</option>
+        <option value="チラシ">チラシ・ポスター</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+
+    <div id="bookMsg"></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" onclick="onConfirmBook()" id="btnConfirm">かくにんがめんへ</button>
+  </section>
+
+  <!-- ============================================================
+       📝 画面4: 確認画面
+       ============================================================ -->
+  <section id="screen-confirm" class="card hidden">
+    <h2>このないようでよろしいですか？</h2>
+    <div id="confirmDetail" class="summary-grid"></div>
+    <div id="confirmMsg"></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" onclick="onSubmitBook()" id="btnSubmit">
+      <span id="btnSubmitText">よやくする</span>
+    </button>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="backToBook()">←しゅうせいする</button>
+  </section>
+
+  <!-- ============================================================
+       🎉 画面5: 完了画面
+       ============================================================ -->
+  <section id="screen-done" class="card hidden center">
+    <div class="success-pop">🎉</div>
+    <h2>よやくがかんりょうしました！</h2>
+    <p id="doneNote">かくにんメールをおおくりしました。ごかくにんください。</p>
+    <p>よやくばんごう: <strong id="doneReservationId" style="font-size:22px;color:var(--orange)"></strong></p>
+    <div style="height:14px"></div>
+    <button class="btn btn-secondary" onclick="goMyReservations()">マイよやくをみる</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="goBookAgain()">べつのびをよやくする</button>
+  </section>
+
+  <!-- ============================================================
+       📋 画面6: マイ予約
+       ============================================================ -->
+  <section id="screen-mine" class="card hidden">
+    <h2>マイよやく</h2>
+    <p class="muted" id="mineEmailHint"></p>
+    <div id="mineList">
+      <div class="muted center">よみこみちゅう…</div>
+    </div>
+    <div style="height:10px"></div>
+    <button class="btn btn-secondary" onclick="goBookAgain()">あたらしくよやくする</button>
+  </section>
+
+  <!-- ============================================================
+       🛠️ 画面7: 管理者ダッシュボード
+       ============================================================ -->
+  <section id="screen-admin" class="card hidden">
+    <h2>かんりダッシュボード</h2>
+    <div id="adminSummary" class="summary-grid"></div>
+    <div style="margin:10px 0">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">📊 開催日別の予約状況（大人 / こども）</div>
+      <div style="position:relative;height:200px"><canvas id="adminChart"></canvas></div>
+    </div>
+    <div style="margin: 8px 0">
+      <button class="btn btn-ghost btn-sm" onclick="loadAdmin()">🔄 さいよみこみ</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📥 CSVダウンロード</button>
+    </div>
+    <div id="adminList" style="margin-top:10px;overflow-x:auto">
+      <div class="muted center">よみこみちゅう…</div>
+    </div>
+  </section>
+
+  <!-- 共通 サイドメニュー -->
+  <div id="menuOverlay" class="menu-overlay hidden" onclick="closeMenuIfBg(event)">
+    <div class="menu-panel" onclick="event.stopPropagation()">
+      <button class="btn btn-secondary" onclick="goBookAgain()">📅 あたらしくよやく</button>
+      <button class="btn btn-secondary" onclick="goMyReservations()">📋 マイよやく</button>
+      <button class="btn btn-secondary hidden" id="adminMenuBtn" onclick="goAdmin()">🛠️ かんりダッシュボード</button>
+      <button class="btn btn-ghost" onclick="logout()">ログアウト</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeMenu()">とじる</button>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    ※ ごふめいなてんはスタッフまでおたずねください
+  </div>
+</div>
+
+<!-- ============================================================
+     📜 JavaScript — Vanilla（CDN不使用）
+     ============================================================ -->
+<script>
+'use strict';
+
+// ⚙️ GAS Web App エンドポイント（デプロイ後に書き換え）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx0qYEXzMT8gOVYK0POBxo86oc2OIsW3180S2CblCoKOa6frSuba7NrFdznlNfmuvSj/exec';
+
+// 🏢 テナントID（Phase 1: 省略時 'DEFAULT' にフォールバック）
+const TENANT_ID = new URLSearchParams(location.search).get('tenant') || 'DEFAULT';
+if (TENANT_ID === 'DEFAULT' && location.hostname && location.hostname !== 'localhost' && location.protocol !== 'file:') {
+  console.warn('[tenant fallback] DEFAULT を使用中。Phase 2 では URL に ?tenant=<id> 明示推奨。');
+}
+
+// 状態キー
+const LS_KEY = 'kodomo_session_v1';
+
+// 選択中の予約データ（画面間で持ち回し）
+let pickedDate = null;       // yyyy/MM/dd
+let pickedIsFull = false;    // 選択日が満席（待機リスト希望扱い）
+let pendingBooking = null;   // { name, email, phone, date, adultCount, childCount, allergy, source, waitlist }
+let schedulesCache = [];
+let adminChart = null;       // Chart.js インスタンス保持
+let userHistoryCache = null; // Phase 1.5: 認証直後にロード、master + reservations を保持
+let mineShowAll = false;     // Phase 1.5: マイ予約画面「もっと見る」フラグ
+
+// ============================================================
+//  🚀 起動
+// ============================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  const sess = loadSession();
+  if (sess && sess.token && Date.now() < sess.expiry) {
+    // トークン有効性をサーバーでも検証
+    try {
+      const res = await api('verifyToken', { token: sess.token }, 'GET');
+      if (res.ok) {
+        sess.isAdmin = !!res.isAdmin;
+        saveSession(sess);
+        showAuthenticated();
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    clearSession();
+  }
+  showScreen('email');
+});
+
+// ============================================================
+//  🔐 セッション管理
+// ============================================================
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (_e) { return null; }
+}
+function saveSession(sess) {
+  localStorage.setItem(LS_KEY, JSON.stringify(sess));
+}
+function clearSession() {
+  localStorage.removeItem(LS_KEY);
+}
+
+// ============================================================
+//  🌐 GAS API ラッパー
+// ============================================================
+async function api(action, params, method) {
+  method = method || 'GET';
+  if (GAS_URL.indexOf('__PASTE') === 0) {
+    throw new Error('GAS_URL がせっていされていません。フロントエンドのコードをかくにんしてください。');
+  }
+  // すべての API 呼び出しに tenantId を付与
+  const withTenant = Object.assign({ tenant: TENANT_ID }, params || {});
+  if (method === 'GET') {
+    const q = Object.keys(withTenant).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(withTenant[k])).join('&');
+    const url = GAS_URL + '?action=' + encodeURIComponent(action) + (q ? '&' + q : '');
+    const res = await fetch(url, { method: 'GET' });
+    return await res.json();
+  } else {
+    const body = JSON.stringify(Object.assign({ action }, withTenant));
+    // GAS doPost は application/json をブロックすることがあるため text/plain で送る
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: body
+    });
+    return await res.json();
+  }
+}
+
+// ============================================================
+//  🖼️ 画面切替
+// ============================================================
+function showScreen(name) {
+  ['email','otp','book','confirm','done','mine','admin','public'].forEach(n => {
+    const el = document.getElementById('screen-' + n);
+    if (el) el.classList.toggle('hidden', n !== name);
+  });
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ============================================================
+//  🌍 公開カレンダー（未認証）
+// ============================================================
+async function goPublicCalendar() {
+  showScreen('public');
+  const list = document.getElementById('publicList');
+  list.innerHTML = '<div class="muted center">よみこみちゅう…</div>';
+  try {
+    const r = await api('getPublicSchedules', {}, 'GET');
+    if (!r.ok) { list.innerHTML = '<div class="msg msg-err">'+ (r.message || 'よみこみしっぱい') +'</div>'; return; }
+    if (!r.schedules.length) { list.innerHTML = '<div class="msg msg-info">げんざいごあんないできるかいさいびがありません。</div>'; return; }
+    list.innerHTML = '';
+    r.schedules.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'schedule' + (s.isClosed ? ' full' : '');
+      div.style.cursor = 'default';
+      div.innerHTML =
+        '<div class="date">'+ formatDateJP(s.date) +' <span style="font-size:22px">'+ s.indicator +'</span></div>'
+        + '<div class="meta"><strong>'+ escapeHTML(s.label) +'</strong>'
+        + (s.remark ? ' ・ '+ escapeHTML(s.remark) : '') +'</div>';
+      list.appendChild(div);
+    });
+  } catch (e) {
+    list.innerHTML = '<div class="msg msg-err">つうしんエラー: '+ escapeHTML(e.message || e) +'</div>';
+  }
+}
+
+function backFromPublic() {
+  showScreen('email');
+}
+
+function showAuthenticated() {
+  const sess = loadSession();
+  document.getElementById('menuBtn').style.display = 'inline-block';
+  document.getElementById('adminMenuBtn').classList.toggle('hidden', !sess || !sess.isAdmin);
+  goBookAgain();
+}
+
+// ============================================================
+//  📧 OTP送信
+// ============================================================
+async function onSendOTP() {
+  const email = (document.getElementById('emailInput').value || '').trim();
+  const msg = document.getElementById('emailMsg');
+  msg.innerHTML = '';
+  if (!email) return showMsg('emailMsg', 'メールアドレスをにゅうりょくしてください。', 'err');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showMsg('emailMsg', 'メールアドレスのかたちがただしくありません。', 'err');
+
+  setBusy('btnSendOTP','btnSendOTPText', true, 'おくっています…');
+  try {
+    const r = await api('sendOTP', { email }, 'POST');
+    if (r.ok) {
+      sessionStorage.setItem('kodomo_pending_email', email);
+      showMsg('emailMsg', r.message || 'メールをおくりました。', 'ok');
+      setTimeout(() => showScreen('otp'), 600);
+    } else {
+      showMsg('emailMsg', r.message || 'そうしんにしっぱいしました。', 'err');
+    }
+  } catch (e) {
+    showMsg('emailMsg', 'つうしんエラー: ' + (e.message || e), 'err');
+  } finally {
+    setBusy('btnSendOTP','btnSendOTPText', false, 'コードをおくる');
+  }
+}
+
+function backToEmail() {
+  document.getElementById('otpInput').value = '';
+  showMsg('otpMsg', '', 'err');
+  showScreen('email');
+}
+
+// ============================================================
+//  🔢 OTP照合
+// ============================================================
+async function onVerifyOTP() {
+  const email = sessionStorage.getItem('kodomo_pending_email') || '';
+  const code = (document.getElementById('otpInput').value || '').trim();
+  if (!email) { showMsg('otpMsg', 'メールアドレスがしていされていません。', 'err'); return; }
+  if (!/^\d{6}$/.test(code)) { showMsg('otpMsg', '6けたのすうじをにゅうりょくしてください。', 'err'); return; }
+
+  setBusy('btnVerifyOTP','btnVerifyOTPText', true, 'かくにんちゅう…');
+  try {
+    const r = await api('verifyOTP', { email, code }, 'POST');
+    if (r.ok) {
+      saveSession({
+        token: r.token,
+        email: email,
+        tenantId: TENANT_ID,
+        isAdmin: !!r.isAdmin,
+        expiry: Date.now() + 60 * 60 * 1000
+      });
+      showMsg('otpMsg', 'にんしょうにせいこうしました！', 'ok');
+      setTimeout(() => showAuthenticated(), 500);
+    } else {
+      showMsg('otpMsg', r.message || 'コードがただしくありません。', 'err');
+    }
+  } catch (e) {
+    showMsg('otpMsg', 'つうしんエラー: ' + (e.message || e), 'err');
+  } finally {
+    setBusy('btnVerifyOTP','btnVerifyOTPText', false, 'にんしょうする');
+  }
+}
+
+// ============================================================
+//  📅 予約フォーム（日程読込）
+// ============================================================
+async function goBookAgain() {
+  pickedDate = null;
+  pickedIsFull = false;
+  pendingBooking = null;
+  showScreen('book');
+  // 認証ユーザーの利用履歴を取得 → 初回 / リピーター UI 分岐
+  await refreshUserHistory();
+  renderVisitorBadge();
+  await loadSchedules();
+}
+
+async function refreshUserHistory() {
+  const sess = loadSession();
+  if (!sess || !sess.token) { userHistoryCache = null; return; }
+  try {
+    const r = await api('getUserHistory', { token: sess.token, email: sess.email }, 'GET');
+    userHistoryCache = (r && r.ok) ? r : null;
+  } catch (e) { userHistoryCache = null; }
+}
+
+function renderVisitorBadge() {
+  const badge = document.getElementById('visitorBadge');
+  const sourceWrap = document.getElementById('sourceWrap');
+  if (!badge) return;
+  const sess = loadSession();
+  const master = userHistoryCache && userHistoryCache.master;
+  const visits = master ? master.totalVisits : 0;
+
+  if (visits === 0) {
+    // 初回ユーザー
+    badge.innerHTML = '<div class="msg msg-ok">🌸 はじめてのご利用、ようこそ！</div>';
+    if (sourceWrap) sourceWrap.style.background = '#fef3c7';
+    return;
+  }
+
+  // リピーター
+  const lastVisit = master.lastVisit ? formatDateJP(master.lastVisit) : '';
+  const allergiesPart = master.allergies ? ' ・ アレルギー: ' + escapeHTML(master.allergies) : '';
+  const regularMark = master.isRegular ? ' 🌟<strong>じょうれんさん</strong>' : '';
+  badge.innerHTML = '<div class="msg msg-info">'
+    + '🎉 <strong>'+ escapeHTML(master.name || sess.email) +' さん</strong>、らいじょう '+ visits +' かいめ'+ regularMark
+    + (lastVisit ? ' ／ ぜんかい: '+ lastVisit : '')
+    + allergiesPart
+    + '<div style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="prefillFromLastVisit()" style="width:auto;display:inline-block">↺ ぜんかいとおなじじょうけんでよやく</button></div>'
+    + '</div>';
+  if (sourceWrap) sourceWrap.style.background = '';
+}
+
+function prefillFromLastVisit() {
+  if (!userHistoryCache || !userHistoryCache.reservations || !userHistoryCache.reservations.length) return;
+  // 直近の確認済予約を探す
+  const last = userHistoryCache.reservations.find(r => r.status === '確認済');
+  if (!last) { alert('前回の予約が見つかりませんでした。'); return; }
+  document.getElementById('nameInput').value = last.name || '';
+  document.getElementById('adultInput').value = last.adultCount || 1;
+  document.getElementById('childInput').value = last.childCount || 1;
+  if (last.allergy) document.getElementById('allergyInput').value = last.allergy;
+  // 電話は最新マスタから
+  if (userHistoryCache.master && userHistoryCache.master.phone) {
+    document.getElementById('phoneInput').value = userHistoryCache.master.phone;
+  }
+  showMsg('bookMsg', '前回の内容をひきつぎました。かいさいびとにんずうをかくにんしてください。', 'ok');
+}
+
+async function loadSchedules() {
+  const list = document.getElementById('scheduleList');
+  list.innerHTML = '<div class="muted center">よみこみちゅう…</div>';
+  try {
+    const r = await api('getSchedules', {}, 'GET');
+    if (!r.ok) { list.innerHTML = '<div class="msg msg-err">'+ (r.message || 'よみこみしっぱい') +'</div>'; return; }
+    schedulesCache = r.schedules || [];
+    if (!schedulesCache.length) {
+      list.innerHTML = '<div class="msg msg-info">げんざいごよやくいただけるびがありません。</div>';
+      return;
+    }
+    list.innerHTML = '';
+    schedulesCache.forEach(s => {
+      const div = document.createElement('div');
+      const isFull = s.isFull;
+      const isClosed = s.isClosed;
+      // 受付停止だけクリック不可。満席は「キャンセル待ち」として選択可。
+      div.className = 'schedule' + (isClosed ? ' full' : '');
+      const badge = isClosed
+        ? '<span class="badge badge-closed">うけつけしてい</span>'
+        : (isFull ? '<span class="badge badge-full">まんせき・キャンセルまち</span>' : '<span class="badge badge-ok">うけつけちゅう</span>');
+      const metaText = isFull
+        ? 'まんせきです。キャンセルまちでとうろくできます。'
+        : 'のこり: おとな '+ s.adultRemain +'めい / こども '+ s.childRemain +'めい';
+      div.innerHTML =
+        '<div class="date">'+ formatDateJP(s.date) + badge +'</div>'
+        + '<div class="meta">'+ escapeHTML(metaText)
+        + (s.remark ? ' ・ '+ escapeHTML(s.remark) : '') +'</div>';
+      if (!isClosed) {
+        div.onclick = () => selectDate(s.date, div, isFull);
+      }
+      list.appendChild(div);
+    });
+  } catch (e) {
+    list.innerHTML = '<div class="msg msg-err">つうしんエラー: '+ escapeHTML(e.message || e) +'</div>';
+  }
+}
+
+function selectDate(date, el, isFull) {
+  pickedDate = date;
+  pickedIsFull = !!isFull;
+  document.querySelectorAll('.schedule').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function onConfirmBook() {
+  const msg = document.getElementById('bookMsg');
+  msg.innerHTML = '';
+  if (!pickedDate) return showMsg('bookMsg', 'かいさいびをえらんでください。', 'err');
+  const name = (document.getElementById('nameInput').value || '').trim();
+  const phone = (document.getElementById('phoneInput').value || '').trim();
+  const adult = parseInt(document.getElementById('adultInput').value, 10) || 0;
+  const child = parseInt(document.getElementById('childInput').value, 10) || 0;
+  const allergy = (document.getElementById('allergyInput').value || '').trim();
+  if (!name) return showMsg('bookMsg', 'おなまえをにゅうりょくしてください。', 'err');
+  if (adult < 0 || child < 0) return showMsg('bookMsg', 'にんずうは0いじょうでにゅうりょくしてください。', 'err');
+  if (adult + child === 0) return showMsg('bookMsg', 'おとなまたはこどものにんずうを1めいいじょうにゅうりょくしてください。', 'err');
+
+  const sess = loadSession();
+  const source = (document.getElementById('sourceInput').value || '').trim();
+  pendingBooking = {
+    name, email: sess.email, phone,
+    date: pickedDate,
+    adultCount: adult, childCount: child, allergy,
+    source: source,
+    waitlist: pickedIsFull
+  };
+
+  const d = document.getElementById('confirmDetail');
+  d.innerHTML = ''
+    + '<div class="cell"><div class="lbl">かいさいび</div><div class="val">'+ escapeHTML(formatDateJP(pickedDate)) +'</div></div>'
+    + '<div class="cell"><div class="lbl">おなまえ</div><div class="val" style="font-size:15px">'+ escapeHTML(name) +'</div></div>'
+    + '<div class="cell"><div class="lbl">おとな</div><div class="val">'+ adult +' めい</div></div>'
+    + '<div class="cell"><div class="lbl">こども</div><div class="val">'+ child +' めい</div></div>'
+    + (phone ? '<div class="cell" style="grid-column: span 2"><div class="lbl">でんわ</div><div class="val" style="font-size:14px">'+ escapeHTML(phone) +'</div></div>' : '')
+    + (allergy ? '<div class="cell" style="grid-column: span 2"><div class="lbl">アレルギー</div><div class="val" style="font-size:14px;white-space:pre-wrap">'+ escapeHTML(allergy) +'</div></div>' : '');
+
+  // 満席日選択時はキャンセル待ち確認の警告を表示
+  if (pickedIsFull) {
+    showMsg('confirmMsg', 'このひはまんせきです。キャンセルまちでうけつけます。あきがでたらつうちします。', 'info');
+    document.getElementById('btnSubmitText').textContent = 'キャンセルまちでうけつける';
+  } else {
+    showMsg('confirmMsg', '', 'err');
+    document.getElementById('btnSubmitText').textContent = 'よやくする';
+  }
+
+  showScreen('confirm');
+}
+
+function backToBook() { showScreen('book'); }
+
+async function onSubmitBook() {
+  if (!pendingBooking) return;
+  const sess = loadSession();
+  setBusy('btnSubmit','btnSubmitText', true, 'よやくちゅう…');
+  try {
+    const r = await api('createReservation', Object.assign({ token: sess.token }, pendingBooking), 'POST');
+    if (r.ok) {
+      document.getElementById('doneReservationId').textContent = r.reservationId;
+      // 待機リスト登録だったら見出しと案内をキャンセル待ち版に差し替え
+      const doneTitle = document.querySelector('#screen-done h2');
+      const donePop = document.querySelector('#screen-done .success-pop');
+      const doneNote = document.getElementById('doneNote');
+      if (r.status === '待機') {
+        doneTitle.textContent = 'キャンセルまちでうけつけました！';
+        donePop.textContent = '⏳';
+        if (doneNote) doneNote.textContent = 'まんせきのため、キャンセルまちでとうろくしました。あきがでたらメールでつうちします。';
+      } else {
+        doneTitle.textContent = 'よやくがかんりょうしました！';
+        donePop.textContent = '🎉';
+        if (doneNote) doneNote.textContent = 'かくにんメールをおおくりしました。ごかくにんください。';
+      }
+      showScreen('done');
+    } else if (r.duplicate === 'L1') {
+      // 既に予約あり → モーダル相当で案内
+      const goMine = confirm(r.message + '\n\n「OK」でマイ予約をひらく、「キャンセル」でこのまま。');
+      if (goMine) goMyReservations();
+    } else if (r.duplicate === 'L2') {
+      // 5分以内の連投 → トースト相当
+      showMsg('confirmMsg', '⚠️ ' + (r.message || '重複送信を検出しました'), 'info');
+    } else if (r.duplicate === 'L3') {
+      // ブロックリスト
+      showMsg('confirmMsg', '🚫 ' + (r.message || 'ご予約をお受けできません'), 'err');
+    } else {
+      showMsg('confirmMsg', r.message || 'よやくにしっぱいしました。', 'err');
+    }
+  } catch (e) {
+    showMsg('confirmMsg', 'つうしんエラー: '+ (e.message || e), 'err');
+  } finally {
+    setBusy('btnSubmit','btnSubmitText', false, 'よやくする');
+  }
+}
+
+// ============================================================
+//  📋 マイ予約
+// ============================================================
+async function goMyReservations() {
+  const sess = loadSession();
+  document.getElementById('mineEmailHint').textContent = '（'+ (sess && sess.email || '') +'）';
+  showScreen('mine');
+  mineShowAll = false;
+  await refreshUserHistory();
+  renderMineList();
+}
+
+function renderMineList() {
+  const list = document.getElementById('mineList');
+  if (!userHistoryCache) {
+    list.innerHTML = '<div class="msg msg-err">よみこみしっぱい</div>';
+    return;
+  }
+  const master = userHistoryCache.master;
+  const reservations = userHistoryCache.reservations || [];
+
+  let html = '';
+
+  // 来場サマリ（マスタがあれば表示）
+  if (master) {
+    const allergyPart = master.allergies ? ' ・ アレルギー: ' + escapeHTML(master.allergies) : '';
+    const firstPart = master.firstVisit ? ' ／ しょかい: ' + escapeHTML(formatDateJP(master.firstVisit)) : '';
+    const regularMark = master.isRegular ? ' 🌟<strong>じょうれんさん</strong>' : '';
+    html += '<div class="msg msg-info" style="margin-bottom:12px">'
+         + '🎉 らいじょう <strong>'+ master.totalVisits +'</strong> かいめ'+ regularMark + firstPart + allergyPart
+         + (master.cancelCount > 0 ? '<div class="muted" style="margin-top:4px">キャンセル: '+ master.cancelCount +' かい</div>' : '')
+         + '</div>';
+  }
+
+  if (!reservations.length) {
+    html += '<div class="muted center" style="padding:20px">よやくはまだありません。</div>';
+    list.innerHTML = html;
+    return;
+  }
+
+  // これから / これまで に分離
+  const todayStr = formatYmdToday();
+  const upcoming = reservations.filter(r => r.date >= todayStr);
+  const past = reservations.filter(r => r.date < todayStr);
+
+  if (upcoming.length) {
+    html += '<h3 style="margin:10px 0 6px;font-size:15px;color:var(--green)">📅 これからのよやく</h3>';
+    upcoming.forEach(res => { html += renderResRow(res, true); });
+  }
+
+  if (past.length) {
+    html += '<h3 style="margin:14px 0 6px;font-size:15px;color:var(--muted)">📜 これまでのりよう</h3>';
+    const initialCount = 5;
+    const visible = mineShowAll ? past : past.slice(0, initialCount);
+    visible.forEach(res => { html += renderResRow(res, false); });
+    if (!mineShowAll && past.length > initialCount) {
+      html += '<div style="text-align:center;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="mineShowAll=true;renderMineList()" style="width:auto">↓ もっとみる ('+ (past.length - initialCount) +' けん)</button></div>';
+    }
+  }
+  list.innerHTML = html;
+}
+
+function renderResRow(res, canCancel) {
+  const statusBadge = res.status === '確認済' ? '<span class="badge badge-ok">確認済</span>'
+                    : res.status === '待機'    ? '<span class="badge badge-full" style="background:#fef3c7;color:#92400e">⏳ 待機</span>'
+                    :                            '<span class="badge badge-closed">'+ escapeHTML(res.status) +'</span>';
+  return '<div class="res-row">'
+    + '<div class="res-info">'
+    + '  <div class="date">'+ escapeHTML(formatDateJP(res.date)) +' '+ statusBadge +'</div>'
+    + '  <div class="muted">おとな '+ res.adultCount +' / こども '+ res.childCount + (res.allergy ? ' ・ ' + escapeHTML(res.allergy) : '') +'</div>'
+    + '  <div class="id">No. '+ escapeHTML(res.reservationId) +'</div>'
+    + '</div>'
+    + (canCancel && (res.status === '確認済' || res.status === '待機')
+        ? '<button class="btn btn-danger btn-sm" style="width:auto" onclick="onCancel(\''+ res.reservationId +'\')">キャンセル</button>'
+        : '')
+    + '</div>';
+}
+
+function formatYmdToday() {
+  const d = new Date();
+  return d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+}
+
+async function onCancel(reservationId) {
+  if (!confirm('このよやくをキャンセルしますか？')) return;
+  const sess = loadSession();
+  try {
+    const r = await api('cancelReservation', { token: sess.token, reservationId }, 'POST');
+    alert(r.message || (r.ok ? 'キャンセルしました' : 'しっぱいしました'));
+    if (r.ok) {
+      await refreshUserHistory();
+      renderMineList();
+    }
+  } catch (e) {
+    alert('つうしんエラー: '+ (e.message || e));
+  }
+}
+
+// ============================================================
+//  🛠️ 管理者ダッシュボード
+// ============================================================
+async function goAdmin() {
+  const sess = loadSession();
+  if (!sess || !sess.isAdmin) { alert('かんりしゃけんげんがひつようです。'); return; }
+  showScreen('admin');
+  await loadAdmin();
+}
+
+async function loadAdmin() {
+  const sess = loadSession();
+  const summary = document.getElementById('adminSummary');
+  const list = document.getElementById('adminList');
+  summary.innerHTML = ''; list.innerHTML = '<div class="muted center">よみこみちゅう…</div>';
+
+  try {
+    const [s, l] = await Promise.all([
+      api('adminGetSummary', { token: sess.token }, 'GET'),
+      api('adminGetAll', { token: sess.token }, 'GET')
+    ]);
+    if (!s.ok) { summary.innerHTML = '<div class="msg msg-err">'+ (s.message || 'しっぱい') +'</div>'; }
+    else {
+      const sm = s.summary;
+      summary.innerHTML = ''
+        + '<div class="cell"><div class="lbl">よやくごうけい</div><div class="val">'+ sm.total +'けん</div></div>'
+        + '<div class="cell"><div class="lbl">かくにんずみ</div><div class="val">'+ (sm.byStatus['確認済'] || 0) +'けん</div></div>'
+        + '<div class="cell"><div class="lbl">キャンセル</div><div class="val">'+ (sm.byStatus['キャンセル'] || 0) +'けん</div></div>'
+        + '<div class="cell"><div class="lbl">たいき</div><div class="val">'+ (sm.byStatus['待機'] || 0) +'けん</div></div>';
+      renderAdminChart(sm.byDate || []);
+    }
+    if (!l.ok) { list.innerHTML = '<div class="msg msg-err">'+ (l.message || 'しっぱい') +'</div>'; return; }
+    if (!l.reservations.length) { list.innerHTML = '<div class="muted center" style="padding:20px">よやくはまだありません。</div>'; return; }
+
+    let html = '<table class="admin-tbl"><thead><tr>'
+      + '<th>らいじょうび</th><th>おなまえ</th><th>おとな</th><th>こども</th><th>ステータス</th><th></th>'
+      + '</tr></thead><tbody>';
+    l.reservations.forEach(r => {
+      html += '<tr>'
+        + '<td>'+ escapeHTML(r.date) +'</td>'
+        + '<td>'+ escapeHTML(r.name) +'<div class="muted" style="font-size:10px">'+ escapeHTML(r.email) +'</div></td>'
+        + '<td>'+ r.adultCount +'</td>'
+        + '<td>'+ r.childCount +'</td>'
+        + '<td>'+ escapeHTML(r.status) +'</td>'
+        + '<td>'
+        +   '<select onchange="onAdminStatus(\''+ r.reservationId +'\', this.value)" style="font-size:11px;padding:4px">'
+        +     '<option value="">--</option>'
+        +     '<option value="確認済">確認済</option>'
+        +     '<option value="キャンセル">キャンセル</option>'
+        +     '<option value="待機">待機</option>'
+        +   '</select>'
+        + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    list.innerHTML = html;
+  } catch (e) {
+    list.innerHTML = '<div class="msg msg-err">つうしんエラー: '+ escapeHTML(e.message || e) +'</div>';
+  }
+}
+
+async function onAdminStatus(reservationId, status) {
+  if (!status) return;
+  if (!confirm(reservationId + ' を「'+ status +'」にへんこうしますか？')) return;
+  const sess = loadSession();
+  try {
+    const r = await api('adminUpdateStatus', { token: sess.token, reservationId, status }, 'POST');
+    alert(r.message || (r.ok ? 'へんこうしました' : 'しっぱいしました'));
+    if (r.ok) loadAdmin();
+  } catch (e) {
+    alert('つうしんエラー: '+ (e.message || e));
+  }
+}
+
+function exportCSV() {
+  const sess = loadSession();
+  const url = GAS_URL + '?action=adminExportCSV&tenant=' + encodeURIComponent(TENANT_ID) + '&token=' + encodeURIComponent(sess.token);
+  window.open(url, '_blank');
+}
+
+/**
+ * 開催日別の予約状況グラフを描画（Chart.js）
+ * @param {Array<{date:string, adult:number, child:number, count:number}>} byDate
+ */
+function renderAdminChart(byDate) {
+  const canvas = document.getElementById('adminChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (adminChart) { adminChart.destroy(); adminChart = null; }
+  const labels = byDate.map(b => b.date.replace(/^\d{4}\//, ''));
+  const adults = byDate.map(b => b.adult);
+  const childs = byDate.map(b => b.child);
+  adminChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'おとな', data: adults, backgroundColor: '#fb923c' },
+        { label: 'こども', data: childs, backgroundColor: '#16a34a' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 } } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, ticks: { font: { size: 10 } } },
+        y: { stacked: true, beginAtZero: true, ticks: { font: { size: 10 }, precision: 0 } }
+      }
+    }
+  });
+}
+
+// ============================================================
+//  ☰ メニュー / ログアウト
+// ============================================================
+function openMenu()  { document.getElementById('menuOverlay').classList.remove('hidden'); }
+function closeMenu() { document.getElementById('menuOverlay').classList.add('hidden'); }
+function closeMenuIfBg(e) { if (e.target.id === 'menuOverlay') closeMenu(); }
+function logout() {
+  clearSession();
+  sessionStorage.removeItem('kodomo_pending_email');
+  userHistoryCache = null;
+  mineShowAll = false;
+  document.getElementById('menuBtn').style.display = 'none';
+  closeMenu();
+  showScreen('email');
+}
+
+// ============================================================
+//  🛠️ ユーティリティ
+// ============================================================
+function setBusy(btnId, textId, busy, text) {
+  const btn = document.getElementById(btnId);
+  const t = document.getElementById(textId);
+  if (!btn) return;
+  btn.disabled = busy;
+  if (busy) {
+    t.innerHTML = '<span class="spinner"></span> '+ escapeHTML(text);
+  } else {
+    t.textContent = text;
+  }
+}
+
+function showMsg(id, text, kind) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!text) { el.innerHTML = ''; return; }
+  const cls = kind === 'ok' ? 'msg-ok' : (kind === 'info' ? 'msg-info' : 'msg-err');
+  el.innerHTML = '<div class="msg '+ cls +'">'+ escapeHTML(text) +'</div>';
+}
+
+function escapeHTML(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function formatDateJP(yyyymmdd) {
+  if (!yyyymmdd) return '';
+  const m = String(yyyymmdd).match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if (!m) return yyyymmdd;
+  const dow = ['にち','げつ','か','すい','もく','きん','ど'];
+  const d = new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10));
+  return m[2] + 'がつ' + m[3] + 'にち（'+ dow[d.getDay()] +'）';
+}
+</script>
+<!-- Phase 3 管理ダッシュ用の Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</body>
+</html>
