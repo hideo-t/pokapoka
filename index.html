@@ -729,21 +729,42 @@ async function loadSchedules() {
       const div = document.createElement('div');
       const isFull = s.isFull;
       const isClosed = s.isClosed;
-      // 受付停止だけクリック不可。満席は「キャンセル待ち」として選択可。
-      div.className = 'schedule' + (isClosed ? ' full' : '');
-      const badge = isClosed
-        ? '<span class="badge badge-closed">うけつけしてい</span>'
-        : (isFull ? '<span class="badge badge-full">まんせき・キャンセルまち</span>' : '<span class="badge badge-ok">うけつけちゅう</span>');
-      const metaText = isFull
-        ? 'まんせきです。キャンセルまちでとうろくできます。'
-        : 'のこり: おとな '+ s.adultRemain +'めい / こども '+ s.childRemain +'めい';
+      // 自分がすでに予約済みかチェック (Phase 1.5)
+      const myBooking = isAlreadyBooked(s.date);
+
+      let badge, metaText, clickHandler;
+      if (myBooking) {
+        // 既予約 → よやくずみバッジ、クリックでマイ予約へ誘導
+        div.className = 'schedule already-booked';
+        div.style.borderColor = 'var(--green)';
+        div.style.background = 'var(--green-light)';
+        const myStatusLabel = myBooking.status === '待機' ? '⏳ キャンセルまちずみ' : '✅ よやくずみ';
+        badge = '<span class="badge" style="background:var(--green);color:#fff">'+ myStatusLabel +'</span>';
+        metaText = 'よやくばんごう: '+ myBooking.reservationId +' ／ おとな '+ myBooking.adultCount +' / こども '+ myBooking.childCount;
+        clickHandler = () => goMyReservations();
+      } else if (isClosed) {
+        div.className = 'schedule full';
+        badge = '<span class="badge badge-closed">うけつけしてい</span>';
+        metaText = 'うけつけしていちゅうです';
+        clickHandler = null;
+      } else if (isFull) {
+        div.className = 'schedule';
+        badge = '<span class="badge badge-full">まんせき・キャンセルまち</span>';
+        metaText = 'まんせきです。キャンセルまちでとうろくできます。';
+        clickHandler = () => selectDate(s.date, div, true);
+      } else {
+        div.className = 'schedule';
+        badge = '<span class="badge badge-ok">うけつけちゅう</span>';
+        metaText = 'のこり: おとな '+ s.adultRemain +'めい / こども '+ s.childRemain +'めい';
+        clickHandler = () => selectDate(s.date, div, false);
+      }
+
       div.innerHTML =
-        '<div class="date">'+ formatDateJP(s.date) + badge +'</div>'
+        '<div class="date">'+ formatDateJP(s.date) +' '+ badge +'</div>'
         + '<div class="meta">'+ escapeHTML(metaText)
         + (s.remark ? ' ・ '+ escapeHTML(s.remark) : '') +'</div>';
-      if (!isClosed) {
-        div.onclick = () => selectDate(s.date, div, isFull);
-      }
+
+      if (clickHandler) div.onclick = clickHandler;
       list.appendChild(div);
     });
   } catch (e) {
@@ -756,6 +777,18 @@ function selectDate(date, el, isFull) {
   pickedIsFull = !!isFull;
   document.querySelectorAll('.schedule').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
+}
+
+/**
+ * 自分が指定日にすでに予約しているかチェック（確認済 / 待機 のみ）
+ * @param {string} dateStr 'yyyy/M/d'
+ * @return {Object|null} 該当予約 or null
+ */
+function isAlreadyBooked(dateStr) {
+  if (!userHistoryCache || !userHistoryCache.reservations) return null;
+  return userHistoryCache.reservations.find(r =>
+    r.date === dateStr && (r.status === '確認済' || r.status === '待機')
+  ) || null;
 }
 
 function onConfirmBook() {
