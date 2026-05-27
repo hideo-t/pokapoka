@@ -310,12 +310,30 @@
     <h2>このないようでよろしいですか？</h2>
     <div id="confirmDetail" class="summary-grid"></div>
     <div id="confirmMsg"></div>
-    <div style="height:10px"></div>
-    <button class="btn btn-primary" onclick="onSubmitBook()" id="btnSubmit">
-      <span id="btnSubmitText">よやくする</span>
-    </button>
-    <div style="height:8px"></div>
-    <button class="btn btn-ghost btn-sm" onclick="backToBook()">←しゅうせいする</button>
+
+    <!-- 重複検出時の対処パネル -->
+    <div id="confirmDupePanel" class="hidden" style="margin-top:10px">
+      <div class="msg msg-err" style="margin-bottom:8px">
+        <strong>⚠️ すでにごよやくがあります</strong>
+        <div id="confirmDupeMsg" style="margin-top:4px;font-size:13px;color:#1f2937"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="onDupeViewMine()">📋 マイよやくをみる</button>
+      <div style="height:6px"></div>
+      <button class="btn btn-danger" onclick="onDupeCancelAndRebook()" id="btnDupeCancel">
+        <span id="btnDupeCancelText">❌ きそんよやくをキャンセルして あたらしくよやく</span>
+      </button>
+      <div style="height:6px"></div>
+      <button class="btn btn-ghost" onclick="onDupeChooseAnother()">📅 べつのびをえらぶ</button>
+    </div>
+
+    <div id="confirmActions">
+      <div style="height:10px"></div>
+      <button class="btn btn-primary" onclick="onSubmitBook()" id="btnSubmit">
+        <span id="btnSubmitText">よやくする</span>
+      </button>
+      <div style="height:8px"></div>
+      <button class="btn btn-ghost btn-sm" onclick="backToBook()">←しゅうせいする</button>
+    </div>
   </section>
 
   <!-- ============================================================
@@ -406,6 +424,7 @@ let schedulesCache = [];
 let adminChart = null;       // Chart.js インスタンス保持
 let userHistoryCache = null; // Phase 1.5: 認証直後にロード、master + reservations を保持
 let mineShowAll = false;     // Phase 1.5: マイ予約画面「もっと見る」フラグ
+let pendingDuplicateId = null; // Phase 1.5: L1 検出時の既存予約ID
 
 // ============================================================
 //  🚀 起動
@@ -695,6 +714,7 @@ function selectDate(date, el, isFull) {
 }
 
 function onConfirmBook() {
+  resetDupePanel();
   const msg = document.getElementById('bookMsg');
   msg.innerHTML = '';
   if (!pickedDate) return showMsg('bookMsg', 'かいさいびをえらんでください。', 'err');
@@ -738,7 +758,56 @@ function onConfirmBook() {
   showScreen('confirm');
 }
 
-function backToBook() { showScreen('book'); }
+function backToBook() {
+  resetDupePanel();
+  showScreen('book');
+}
+
+// ============================================================
+//  ⚠️ 重複登録パネルのハンドラ (L1 用)
+// ============================================================
+function resetDupePanel() {
+  pendingDuplicateId = null;
+  const panel = document.getElementById('confirmDupePanel');
+  const actions = document.getElementById('confirmActions');
+  if (panel) panel.classList.add('hidden');
+  if (actions) actions.classList.remove('hidden');
+  showMsg('confirmMsg', '', 'err');
+}
+
+function onDupeViewMine() {
+  resetDupePanel();
+  goMyReservations();
+}
+
+function onDupeChooseAnother() {
+  resetDupePanel();
+  showScreen('book');
+}
+
+/**
+ * 既存予約をキャンセル → 新規予約を改めて作成
+ */
+async function onDupeCancelAndRebook() {
+  if (!pendingDuplicateId) return;
+  if (!confirm('きそんのよやく ' + pendingDuplicateId + ' をキャンセルして、'+ pickedDate + ' であたらしくよやくしますか？')) return;
+  const sess = loadSession();
+  setBusy('btnDupeCancel','btnDupeCancelText', true, 'キャンセルちゅう…');
+  try {
+    const c = await api('cancelReservation', { token: sess.token, reservationId: pendingDuplicateId }, 'POST');
+    if (!c.ok) {
+      alert('キャンセルしっぱい: ' + (c.message || ''));
+      return;
+    }
+    resetDupePanel();
+    // 既存をキャンセル後、新規予約を改めて送る
+    await onSubmitBook();
+  } catch (e) {
+    alert('つうしんエラー: ' + (e.message || e));
+  } finally {
+    setBusy('btnDupeCancel','btnDupeCancelText', false, '❌ きそんよやくをキャンセルして あたらしくよやく');
+  }
+}
 
 async function onSubmitBook() {
   if (!pendingBooking) return;
@@ -763,9 +832,13 @@ async function onSubmitBook() {
       }
       showScreen('done');
     } else if (r.duplicate === 'L1') {
-      // 既に予約あり → モーダル相当で案内
-      const goMine = confirm(r.message + '\n\n「OK」でマイ予約をひらく、「キャンセル」でこのまま。');
-      if (goMine) goMyReservations();
+      // 既に予約あり → 確認画面に専用パネル表示
+      pendingDuplicateId = r.existingReservationId || null;
+      document.getElementById('confirmDupeMsg').textContent = r.message || 'すでに同じ日付のご予約があります。';
+      document.getElementById('confirmDupePanel').classList.remove('hidden');
+      document.getElementById('confirmActions').classList.add('hidden');
+      // 既存予約がある場合のみ「取消→再予約」ボタンを有効化
+      document.getElementById('btnDupeCancel').style.display = pendingDuplicateId ? '' : 'none';
     } else if (r.duplicate === 'L2') {
       // 5分以内の連投 → トースト相当
       showMsg('confirmMsg', '⚠️ ' + (r.message || '重複送信を検出しました'), 'info');
