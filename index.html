@@ -121,6 +121,31 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .hidden { display: none !important; }
     .center { text-align: center; }
+
+    /* 全画面ローディングオーバーレイ（操作ブロック）*/
+    .loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn .15s ease;
+    }
+    .loading-panel {
+      background: #fff; padding: 28px 36px;
+      border-radius: var(--radius); box-shadow: 0 12px 32px rgba(0,0,0,.25);
+      text-align: center; min-width: 220px;
+    }
+    .loading-spinner {
+      width: 38px; height: 38px;
+      border: 4px solid var(--green-light);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    .loading-text { font-weight: 700; font-size: 1.02rem; color: var(--text); }
+    .loading-sub  { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
     .muted { color: var(--muted); font-size: 13px; }
     .schedule-list { display: flex; flex-direction: column; gap: 8px; }
     .schedule {
@@ -411,6 +436,17 @@
     <button class="btn btn-ghost btn-sm" onclick="goBookAgain()">←よやくがめんへ</button>
   </section>
 
+  <!-- ============================================================
+       ⏳ 共通: 読み込み中オーバーレイ (操作ブロック)
+       ============================================================ -->
+  <div id="loadingOverlay" class="loading-overlay hidden" aria-live="polite" aria-busy="true">
+    <div class="loading-panel">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">よみこみちゅう…</div>
+      <div class="loading-sub">しばらくおまちください</div>
+    </div>
+  </div>
+
   <!-- 共通 サイドメニュー -->
   <div id="menuOverlay" class="menu-overlay hidden" onclick="closeMenuIfBg(event)">
     <div class="menu-panel" onclick="event.stopPropagation()">
@@ -462,28 +498,27 @@ let pendingDuplicateId = null; // Phase 1.5: L1 検出時の既存予約ID
 window.addEventListener('DOMContentLoaded', async () => {
   // URL クエリ ?screen= による未認証アクセス可能な画面の処理
   const requested = new URLSearchParams(location.search).get('screen');
-  if (requested === 'public') {
-    goPublicCalendar();
-    return;
-  }
-  if (requested === 'contact') {
-    // お問い合わせは未認証でも見られる（LINE/メール案内のみ）
-    goContact();
-    return;
-  }
+  if (requested === 'public') { goPublicCalendar(); return; }
+  if (requested === 'contact') { goContact(); return; }
 
   const sess = loadSession();
   if (sess && sess.token && Date.now() < sess.expiry) {
-    // トークン有効性をサーバーでも検証
+    showLoadingOverlay('じょうきょうをかくにんちゅう…', 'ログインじょうたいをふっき');
+    let restored = false;
     try {
       const res = await api('verifyToken', { token: sess.token }, 'GET');
       if (res.ok) {
         sess.isAdmin = !!res.isAdmin;
         saveSession(sess);
-        showAuthenticated();
-        return;
+        await showAuthenticated();
+        restored = true;
       }
-    } catch (e) { /* fall through */ }
+    } catch (e) {
+      /* fall through */
+    } finally {
+      hideLoadingOverlay();
+    }
+    if (restored) return;
     clearSession();
   }
   showScreen('email');
@@ -547,6 +582,7 @@ async function goPublicCalendar() {
   showScreen('public');
   const list = document.getElementById('publicList');
   list.innerHTML = '<div class="muted center">よみこみちゅう…</div>';
+  showLoadingOverlay('かいさいびを よみこみちゅう…', 'こんざつじょうきょうを とくちゅう');
   try {
     const r = await api('getPublicSchedules', {}, 'GET');
     if (!r.ok) { list.innerHTML = '<div class="msg msg-err">'+ (r.message || 'よみこみしっぱい') +'</div>'; return; }
@@ -564,6 +600,8 @@ async function goPublicCalendar() {
     });
   } catch (e) {
     list.innerHTML = '<div class="msg msg-err">つうしんエラー: '+ escapeHTML(e.message || e) +'</div>';
+  } finally {
+    hideLoadingOverlay();
   }
 }
 
@@ -571,7 +609,7 @@ function backFromPublic() {
   showScreen('email');
 }
 
-function showAuthenticated() {
+async function showAuthenticated() {
   const sess = loadSession();
   document.getElementById('menuBtn').style.display = 'inline-block';
   document.getElementById('adminMenuBtn').classList.toggle('hidden', !sess || !sess.isAdmin);
@@ -581,18 +619,18 @@ function showAuthenticated() {
   switch (requested) {
     case 'mine':
     case 'cancel':  // キャンセルもマイ予約画面から
-      goMyReservations();
+      await goMyReservations();
       break;
     case 'contact':
       goContact();
       break;
     case 'admin':
-      if (sess && sess.isAdmin) goAdmin();
-      else goBookAgain();
+      if (sess && sess.isAdmin) await goAdmin();
+      else await goBookAgain();
       break;
     case 'book':
     default:
-      goBookAgain();
+      await goBookAgain();
   }
 }
 
@@ -676,11 +714,16 @@ async function goBookAgain() {
   pickedIsFull = false;
   pendingBooking = null;
   showScreen('book');
-  // 認証ユーザーの利用履歴を取得 → 初回 / リピーター UI 分岐
-  await refreshUserHistory();
-  renderVisitorBadge();
-  applyDefaultsFromHistory();  // Phase 1.5: リピーターは最新の値で自動入力
-  await loadSchedules();
+  showLoadingOverlay('よやくフォームを じゅんびちゅう…', 'りようりれきと かいさいびを よみこみ');
+  try {
+    // 認証ユーザーの利用履歴を取得 → 初回 / リピーター UI 分岐
+    await refreshUserHistory();
+    renderVisitorBadge();
+    applyDefaultsFromHistory();  // Phase 1.5: リピーターは最新の値で自動入力
+    await loadSchedules();
+  } finally {
+    hideLoadingOverlay();
+  }
 }
 
 /**
@@ -1008,8 +1051,13 @@ async function goMyReservations() {
   document.getElementById('mineEmailHint').textContent = '（'+ (sess && sess.email || '') +'）';
   showScreen('mine');
   mineShowAll = false;
-  await refreshUserHistory();
-  renderMineList();
+  showLoadingOverlay('マイよやくを よみこみちゅう…', 'りれきとさんけいを しゅとくちゅう');
+  try {
+    await refreshUserHistory();
+    renderMineList();
+  } finally {
+    hideLoadingOverlay();
+  }
 }
 
 function renderMineList() {
@@ -1113,6 +1161,7 @@ async function loadAdmin() {
   const summary = document.getElementById('adminSummary');
   const list = document.getElementById('adminList');
   summary.innerHTML = ''; list.innerHTML = '<div class="muted center">よみこみちゅう…</div>';
+  showLoadingOverlay('かんりダッシュを よみこみちゅう…', 'よやくいちらんと しゅうけいを とくちゅう');
 
   try {
     const [s, l] = await Promise.all([
@@ -1156,6 +1205,8 @@ async function loadAdmin() {
     list.innerHTML = html;
   } catch (e) {
     list.innerHTML = '<div class="msg msg-err">つうしんエラー: '+ escapeHTML(e.message || e) +'</div>';
+  } finally {
+    hideLoadingOverlay();
   }
 }
 
@@ -1232,6 +1283,32 @@ function logout() {
 // ============================================================
 //  🛠️ ユーティリティ
 // ============================================================
+// ============================================================
+//  ⏳ ローディングオーバーレイ（多重呼出対応・カウンタ式）
+// ============================================================
+let _loadingCount = 0;
+function showLoadingOverlay(text, sub) {
+  _loadingCount++;
+  const el = document.getElementById('loadingOverlay');
+  if (!el) return;
+  if (text) {
+    const t = el.querySelector('.loading-text');
+    if (t) t.textContent = text;
+  }
+  if (sub !== undefined) {
+    const s = el.querySelector('.loading-sub');
+    if (s) s.textContent = sub || 'しばらくおまちください';
+  }
+  el.classList.remove('hidden');
+}
+function hideLoadingOverlay() {
+  _loadingCount = Math.max(0, _loadingCount - 1);
+  if (_loadingCount === 0) {
+    const el = document.getElementById('loadingOverlay');
+    if (el) el.classList.add('hidden');
+  }
+}
+
 function setBusy(btnId, textId, busy, text) {
   const btn = document.getElementById(btnId);
   const t = document.getElementById(textId);
