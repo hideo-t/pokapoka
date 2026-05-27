@@ -612,7 +612,52 @@ async function goBookAgain() {
   // 認証ユーザーの利用履歴を取得 → 初回 / リピーター UI 分岐
   await refreshUserHistory();
   renderVisitorBadge();
+  applyDefaultsFromHistory();  // Phase 1.5: リピーターは最新の値で自動入力
   await loadSchedules();
+}
+
+/**
+ * 利用者マスタ + 最新予約から、フォームのデフォルト値を自動入力する
+ *   - 初回ユーザー (totalVisits=0): 何もしない
+ *   - リピーター: 氏名・電話 (マスタ最新) + 人数・アレルギー (最新予約)
+ *   - すでにユーザーが入力した値（空でない）は上書きしない（誤上書き防止）
+ */
+function applyDefaultsFromHistory() {
+  if (!userHistoryCache) return;
+  const master = userHistoryCache.master;
+  if (!master || (master.totalVisits | 0) === 0) return;  // 初回はスキップ
+
+  // 最新の予約（createdAt 降順）を取得
+  const reservations = (userHistoryCache.reservations || []).slice();
+  reservations.sort((a, b) => {
+    const aT = a.createdAt ? new Date(a.createdAt.replace(/-/g, '/')).getTime() : 0;
+    const bT = b.createdAt ? new Date(b.createdAt.replace(/-/g, '/')).getTime() : 0;
+    return bT - aT;
+  });
+  const latest = reservations[0];
+
+  const nameEl    = document.getElementById('nameInput');
+  const phoneEl   = document.getElementById('phoneInput');
+  const adultEl   = document.getElementById('adultInput');
+  const childEl   = document.getElementById('childInput');
+  const allergyEl = document.getElementById('allergyInput');
+
+  // 氏名・電話: マスタの最新値（予約レコード由来）
+  if (nameEl && !nameEl.value && (master.name || (latest && latest.name))) {
+    nameEl.value = master.name || latest.name;
+  }
+  if (phoneEl && !phoneEl.value && (master.phone || (latest && latest.phone))) {
+    phoneEl.value = master.phone || latest.phone;
+  }
+
+  // 人数・アレルギー: 最新予約から
+  if (latest) {
+    if (adultEl) adultEl.value = latest.adultCount;
+    if (childEl) childEl.value = latest.childCount;
+    if (allergyEl && !allergyEl.value && latest.allergy) {
+      allergyEl.value = latest.allergy;
+    }
+  }
 }
 
 async function refreshUserHistory() {
