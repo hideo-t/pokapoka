@@ -382,11 +382,41 @@
     </div>
   </section>
 
+  <!-- ============================================================
+       ❓ 画面: お問い合わせ
+       ============================================================ -->
+  <section id="screen-contact" class="card hidden">
+    <h2>おといあわせ</h2>
+    <p>ごしつもん・ごようぼうは、しただいの ほうほうで うけつけしています。</p>
+    <div style="height:8px"></div>
+
+    <div class="msg msg-ok" style="margin-bottom:8px">
+      <strong>📱 LINEでとうろく ＆ メッセージ</strong>
+      <div style="margin-top:4px;font-size:13px">LINEのともだちついかから、メッセージをそうしんしてください。</div>
+    </div>
+    <a href="https://line.me/R/ti/p/@533dgghw" target="_blank" style="text-decoration:none">
+      <button class="btn btn-secondary">📱 LINEでともだちついか</button>
+    </a>
+
+    <div style="height:14px"></div>
+    <div class="msg msg-info" style="margin-bottom:8px">
+      <strong>📧 メールでとうごう</strong>
+      <div style="margin-top:4px;font-size:13px">かんりしゃに ちょくせつ メールできます。</div>
+    </div>
+    <a href="mailto:hdxrope@gmail.com?subject=【ぽかぽか食堂】お問い合わせ" style="text-decoration:none">
+      <button class="btn btn-ghost">📧 メールでといあわせ</button>
+    </a>
+
+    <div style="height:14px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="goBookAgain()">←よやくがめんへ</button>
+  </section>
+
   <!-- 共通 サイドメニュー -->
   <div id="menuOverlay" class="menu-overlay hidden" onclick="closeMenuIfBg(event)">
     <div class="menu-panel" onclick="event.stopPropagation()">
       <button class="btn btn-secondary" onclick="closeMenu();goBookAgain()">📅 あたらしくよやく</button>
       <button class="btn btn-secondary" onclick="closeMenu();goMyReservations()">📋 マイよやく</button>
+      <button class="btn btn-secondary" onclick="closeMenu();goContact()">❓ おといあわせ</button>
       <button class="btn btn-secondary hidden" id="adminMenuBtn" onclick="closeMenu();goAdmin()">🛠️ かんりダッシュボード</button>
       <button class="btn btn-ghost" onclick="closeMenu();logout()">ログアウト</button>
       <button class="btn btn-ghost btn-sm" onclick="closeMenu()">とじる</button>
@@ -430,6 +460,18 @@ let pendingDuplicateId = null; // Phase 1.5: L1 検出時の既存予約ID
 //  🚀 起動
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
+  // URL クエリ ?screen= による未認証アクセス可能な画面の処理
+  const requested = new URLSearchParams(location.search).get('screen');
+  if (requested === 'public') {
+    goPublicCalendar();
+    return;
+  }
+  if (requested === 'contact') {
+    // お問い合わせは未認証でも見られる（LINE/メール案内のみ）
+    goContact();
+    return;
+  }
+
   const sess = loadSession();
   if (sess && sess.token && Date.now() < sess.expiry) {
     // トークン有効性をサーバーでも検証
@@ -491,7 +533,7 @@ async function api(action, params, method) {
 //  🖼️ 画面切替
 // ============================================================
 function showScreen(name) {
-  ['email','otp','book','confirm','done','mine','admin','public'].forEach(n => {
+  ['email','otp','book','confirm','done','mine','admin','public','contact'].forEach(n => {
     const el = document.getElementById('screen-' + n);
     if (el) el.classList.toggle('hidden', n !== name);
   });
@@ -533,7 +575,32 @@ function showAuthenticated() {
   const sess = loadSession();
   document.getElementById('menuBtn').style.display = 'inline-block';
   document.getElementById('adminMenuBtn').classList.toggle('hidden', !sess || !sess.isAdmin);
-  goBookAgain();
+
+  // URL クエリパラメータ ?screen= で起動時画面を分岐（LINE リッチメニュー連携用）
+  const requested = new URLSearchParams(location.search).get('screen');
+  switch (requested) {
+    case 'mine':
+    case 'cancel':  // キャンセルもマイ予約画面から
+      goMyReservations();
+      break;
+    case 'contact':
+      goContact();
+      break;
+    case 'admin':
+      if (sess && sess.isAdmin) goAdmin();
+      else goBookAgain();
+      break;
+    case 'book':
+    default:
+      goBookAgain();
+  }
+}
+
+/**
+ * お問い合わせ画面へ
+ */
+function goContact() {
+  showScreen('contact');
 }
 
 // ============================================================
