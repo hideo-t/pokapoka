@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>こども食堂予約システム｜LINEグループ予約から卒業｜月¥2,980〜</title>
+  <meta name="description" content="こども食堂専用の予約システム。LINEグループ運用のプライバシー問題を月¥2,980で解決。実証PoC「ぽかぽか食堂」で稼働中。30日無料体験。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='4' y='52' font-size='52'%3E🍙%3C/text%3E%3C/svg%3E">
+
+  <!-- OGP / Twitter card -->
+  <meta property="og:title" content="こども食堂予約システム｜LINEグループ予約から卒業">
+  <meta property="og:description" content="月¥2,980で、利用者のプライバシーを守る、こども食堂専用の予約システム。">
+  <meta property="og:image" content="https://hideo-t.github.io/pokapoka/lp/images/ogp.png">
+  <meta property="og:url" content="https://hideo-t.github.io/pokapoka/lp/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="こども食堂予約システム">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="こども食堂予約システム｜LINEグループ予約から卒業">
+  <meta name="twitter:description" content="月¥2,980で、利用者のプライバシーを守る、こども食堂専用の予約システム。">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================================
+       🎨 トークン
+       ======================================================== */
+    :root{
+      --primary:#FF7B47;
+      --primary-dark:#E65A24;
+      --secondary:#4CAF50;
+      --secondary-dark:#3a8e3e;
+      --accent:#FFC107;
+      --bg:#FFF9F0;
+      --text:#2C3E50;
+      --text-light:#6C757D;
+      --text-mute:#9CA3AF;
+      --card:#FFFFFF;
+      --border:#F1E9DA;
+      --shadow:0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg:0 12px 32px rgba(0,0,0,0.10);
+      --radius:14px;
+      --radius-lg:20px;
+      --max:1200px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+    body{
+      font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif;
+      color:var(--text);background:var(--bg);
+      line-height:1.7;font-size:1rem;
+    }
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+
+    /* ========================================================
+       共通レイアウト
+       ======================================================== */
+    .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+    section{padding:80px 0}
+    .h2{font-size:2.5rem;font-weight:900;text-align:center;margin-bottom:14px;letter-spacing:.02em}
+    .h2 .acc{color:var(--primary)}
+    .lead{text-align:center;color:var(--text-light);font-size:1.125rem;margin-bottom:48px;max-width:720px;margin-left:auto;margin-right:auto}
+    .num-en{font-family:'Inter',sans-serif;font-weight:800}
+
+    /* ========================================================
+       ボタン
+       ======================================================== */
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:14px 28px;border-radius:999px;font-weight:700;
+      font-size:1rem;cursor:pointer;border:0;
+      transition:transform .15s ease,background .15s,color .15s,box-shadow .15s;
+      font-family:inherit;
+    }
+    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(255,123,71,.35)}
+    .btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 6px 18px rgba(255,123,71,.45)}
+    .btn-secondary{background:#fff;color:var(--primary);border:2px solid var(--primary)}
+    .btn-secondary:hover{background:var(--primary);color:#fff;transform:translateY(-2px)}
+    .btn-line{background:#06C755;color:#fff}
+    .btn-line:hover{background:#05a046;transform:translateY(-2px)}
+    .btn-lg{padding:18px 36px;font-size:1.1rem}
+    .btn-sm{padding:10px 18px;font-size:.9rem}
+
+    /* ========================================================
+       ヘッダー
+       ======================================================== */
+    .header{
+      position:sticky;top:0;background:rgba(255,249,240,.92);backdrop-filter:blur(8px);
+      z-index:50;padding:14px 0;border-bottom:1px solid var(--border);
+    }
+    .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .logo{font-weight:900;font-size:1.15rem;letter-spacing:.02em;display:flex;align-items:center;gap:6px}
+    .logo .ic{font-size:1.5rem}
+    .nav{display:flex;gap:18px;font-size:.95rem}
+    .nav a{color:var(--text);font-weight:500}
+    .nav a:hover{color:var(--primary)}
+    @media (max-width:768px){
+      .nav{display:none}
+    }
+
+    /* ========================================================
+       Hero
+       ======================================================== */
+    .hero{
+      padding:100px 0 80px;text-align:center;position:relative;overflow:hidden;
+      background:linear-gradient(135deg,#FFF9F0 0%,#FFE7D6 60%,#FFD6BD 100%);
+    }
+    .hero::before{
+      content:'';position:absolute;width:600px;height:600px;
+      background:radial-gradient(circle, rgba(255,193,7,.18) 0%, transparent 70%);
+      top:-200px;right:-150px;z-index:0;
+    }
+    .hero::after{
+      content:'';position:absolute;width:500px;height:500px;
+      background:radial-gradient(circle, rgba(76,175,80,.13) 0%, transparent 70%);
+      bottom:-200px;left:-150px;z-index:0;
+    }
+    .hero .wrap{position:relative;z-index:1}
+    .hero-badge{
+      display:inline-block;background:#fff;color:var(--primary);
+      padding:6px 18px;border-radius:999px;font-size:.85rem;font-weight:700;
+      box-shadow:var(--shadow);margin-bottom:24px;
+    }
+    .hero h1{
+      font-size:3.5rem;font-weight:900;letter-spacing:.01em;
+      line-height:1.3;margin-bottom:24px;
+    }
+    .hero h1 .br{display:block}
+    .hero .accent{color:var(--primary)}
+    .hero-sub{font-size:1.25rem;color:var(--text-light);margin-bottom:14px;font-weight:500}
+    .hero-mini{font-size:.95rem;color:var(--secondary-dark);font-weight:700;margin-bottom:36px}
+    .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+    .hero-trust{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;color:var(--text-light);font-size:.85rem}
+    .hero-trust span::before{content:'✓ ';color:var(--secondary);font-weight:900}
+    @media (max-width:768px){
+      .hero{padding:60px 0 50px}
+      .hero h1{font-size:2rem;line-height:1.4}
+      .hero-sub{font-size:1.05rem}
+    }
+
+    /* ========================================================
+       2. 共感喚起
+       ======================================================== */
+    .pain-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:920px;margin:0 auto}
+    .pain-card{
+      background:var(--card);padding:28px;border-radius:var(--radius);
+      box-shadow:var(--shadow);position:relative;
+    }
+    .pain-card .pic{font-size:2.2rem;margin-bottom:8px}
+    .pain-card h3{font-size:1.1rem;font-weight:700;line-height:1.5;margin-bottom:6px}
+    .pain-card p{color:var(--text-light);font-size:.95rem}
+    @media (max-width:768px){
+      .pain-grid{grid-template-columns:1fr}
+    }
+
+    /* ========================================================
+       3. 解決策（機能）
+       ======================================================== */
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    .feat-card{
+      background:var(--card);padding:32px 28px;border-radius:var(--radius);
+      box-shadow:var(--shadow);border-top:4px solid var(--primary);
+      transition:transform .2s,box-shadow .2s;
+    }
+    .feat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+    .feat-card .ic{font-size:2.4rem;margin-bottom:14px}
+    .feat-card h3{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+    .feat-card p{color:var(--text-light);font-size:.95rem}
+    @media (max-width:768px){
+      .feat-grid{grid-template-columns:1fr}
+    }
+
+    /* ========================================================
+       4. PoC実証
+       ======================================================== */
+    .poc{background:linear-gradient(135deg,#FFF 0%,#FFF9F0 100%)}
+    .poc-row{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+    .poc-left h3{font-size:2rem;font-weight:900;margin-bottom:18px;line-height:1.4}
+    .poc-left p{font-size:1.05rem;margin-bottom:14px;color:var(--text-light)}
+    .poc-stats{display:flex;gap:24px;margin:24px 0;flex-wrap:wrap}
+    .poc-stat{flex:1;min-width:120px;background:#fff;padding:18px;border-radius:var(--radius);border:1px solid var(--border);text-align:center}
+    .poc-stat .v{font-size:1.6rem;font-weight:900;color:var(--primary);display:block}
+    .poc-stat .l{font-size:.85rem;color:var(--text-light);margin-top:4px}
+    .poc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .poc-mock{background:#fff;border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-lg);position:relative}
+    .poc-mock-frame{
+      width:100%;aspect-ratio:9/16;max-width:300px;margin:0 auto;
+      background:linear-gradient(180deg,#fff 0%,var(--bg) 100%);
+      border-radius:24px;border:8px solid #2C3E50;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:var(--text-light);text-align:center;padding:16px;
+    }
+    .poc-mock-frame .icn{font-size:3rem;margin-bottom:8px}
+    .poc-mock-frame .lbl{font-size:.8rem;font-weight:700;color:var(--text)}
+    @media (max-width:768px){
+      .poc-row{grid-template-columns:1fr;gap:32px}
+    }
+
+    /* ========================================================
+       5. 競合比較表
+       ======================================================== */
+    .compare-wrap{overflow-x:auto;padding-bottom:8px}
+    table.compare{
+      width:100%;border-collapse:separate;border-spacing:0;
+      min-width:760px;background:#fff;border-radius:var(--radius);overflow:hidden;
+      box-shadow:var(--shadow);font-size:.95rem;
+    }
+    table.compare th,table.compare td{
+      padding:14px 10px;border-bottom:1px solid var(--border);text-align:center;
+    }
+    table.compare thead th{
+      background:#FFF1E5;font-weight:700;font-size:.85rem;color:var(--text)
+    }
+    table.compare thead th.us{background:var(--primary);color:#fff;font-size:.95rem}
+    table.compare tbody tr td:first-child{text-align:left;font-weight:700;background:#FAFAFA;color:var(--text)}
+    table.compare tbody tr td.us{background:#FFF1E5;font-weight:700;color:var(--primary-dark)}
+    table.compare tbody tr:nth-child(2n) td{background:#FFFCF7}
+    table.compare tbody tr:nth-child(2n) td.us{background:#FFE7D6}
+    table.compare tbody tr:nth-child(2n) td:first-child{background:#F4F1EA}
+    .mark-yes{color:var(--secondary);font-weight:900}
+    .mark-no{color:#DC2626;font-weight:900}
+    .mark-mid{color:var(--accent);font-weight:900}
+
+    /* ========================================================
+       6. 料金プラン
+       ======================================================== */
+    .plans{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+    .plan{
+      background:#fff;padding:28px 22px;border-radius:var(--radius);
+      box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;
+      border-top:6px solid var(--text-light);
+    }
+    .plan.popular{border-top-color:var(--primary);transform:scale(1.03);box-shadow:var(--shadow-lg);z-index:1}
+    .plan-badge{
+      position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+      background:var(--primary);color:#fff;padding:4px 16px;border-radius:999px;
+      font-size:.78rem;font-weight:800;letter-spacing:.04em;
+    }
+    .plan-name{font-size:1.15rem;font-weight:800;margin-bottom:4px}
+    .plan-target{font-size:.8rem;color:var(--text-light);margin-bottom:14px;min-height:32px}
+    .plan-price{font-family:'Inter',sans-serif;font-size:2.4rem;font-weight:900;color:var(--text);margin-bottom:4px}
+    .plan-price small{font-size:.95rem;font-weight:500;color:var(--text-light)}
+    .plan-quota{font-size:.85rem;color:var(--text-light);margin-bottom:18px}
+    .plan-feat{list-style:none;font-size:.9rem;margin-bottom:22px;flex:1}
+    .plan-feat li{padding:6px 0;border-bottom:1px dashed var(--border);display:flex;align-items:flex-start;gap:6px}
+    .plan-feat li:last-child{border-bottom:0}
+    .plan-feat li::before{content:'✓';color:var(--secondary);font-weight:900;flex:0 0 auto}
+    .plan-feat li.disabled{color:var(--text-mute)}
+    .plan-feat li.disabled::before{content:'−';color:var(--text-mute)}
+    .plan .btn{width:100%}
+    @media (max-width:1100px){
+      .plans{grid-template-columns:repeat(2,1fr)}
+      .plan.popular{transform:none}
+    }
+    @media (max-width:600px){
+      .plans{grid-template-columns:1fr}
+    }
+
+    /* ========================================================
+       7. 使い方フロー
+       ======================================================== */
+    .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;position:relative}
+    .flow-step{
+      background:#fff;padding:32px 24px;border-radius:var(--radius);
+      box-shadow:var(--shadow);text-align:center;position:relative;
+    }
+    .flow-step .step{
+      width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-family:'Inter',sans-serif;font-weight:900;font-size:1.4rem;
+      margin-bottom:14px;
+    }
+    .flow-step h4{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+    .flow-step p{color:var(--text-light);font-size:.92rem}
+    .flow-step .ic{font-size:2.4rem;margin-bottom:8px}
+    @media (max-width:768px){
+      .flow{grid-template-columns:1fr}
+    }
+
+    /* ========================================================
+       8. 社会的意義 (Social プラン推し)
+       ======================================================== */
+    .social-sec{
+      background:linear-gradient(135deg,#E8F5E9 0%,#F1F8E9 100%);
+      border-radius:var(--radius-lg);padding:64px 32px;margin:80px 0;
+    }
+    .social-sec h2{text-align:center;font-size:2.2rem;font-weight:900;margin-bottom:14px}
+    .social-sec h2 .acc{color:var(--secondary-dark)}
+    .social-sec .lead{color:var(--text);margin-bottom:36px}
+    .social-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1000px;margin:0 auto}
+    .social-card{background:#fff;padding:20px 16px;border-radius:var(--radius);box-shadow:var(--shadow);text-align:center}
+    .social-card .ic{font-size:2rem;margin-bottom:6px}
+    .social-card h4{font-size:.95rem;font-weight:700;margin-bottom:4px}
+    .social-card p{font-size:.8rem;color:var(--text-light)}
+    .social-note{text-align:center;margin-top:32px;color:var(--text-light);font-size:.9rem}
+    @media (max-width:768px){
+      .social-sec{padding:40px 20px}
+      .social-grid{grid-template-columns:repeat(2,1fr)}
+    }
+
+    /* ========================================================
+       9. FAQ
+       ======================================================== */
+    .faq-list{max-width:840px;margin:0 auto}
+    .faq{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+    .faq summary{
+      padding:18px 22px;font-weight:700;cursor:pointer;list-style:none;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+    }
+    .faq summary::-webkit-details-marker{display:none}
+    .faq summary::after{content:'＋';font-family:'Inter',sans-serif;font-size:1.4rem;color:var(--primary);transition:transform .2s}
+    .faq[open] summary::after{content:'−'}
+    .faq .a{padding:0 22px 18px;color:var(--text-light)}
+
+    /* ========================================================
+       10. 最終CTA
+       ======================================================== */
+    .cta{
+      background:linear-gradient(135deg,var(--primary) 0%,#FF9F66 100%);
+      color:#fff;padding:80px 24px;border-radius:var(--radius-lg);
+      text-align:center;margin:60px 0;
+    }
+    .cta h2{font-size:2.4rem;font-weight:900;margin-bottom:16px;color:#fff}
+    .cta p{font-size:1.15rem;margin-bottom:32px;opacity:.95}
+    .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+    .cta .btn-primary{background:#fff;color:var(--primary)}
+    .cta .btn-primary:hover{background:var(--bg);color:var(--primary-dark)}
+    .cta .btn-secondary{background:transparent;color:#fff;border-color:#fff}
+    .cta .btn-secondary:hover{background:#fff;color:var(--primary)}
+    .cta-meta{font-size:.9rem;opacity:.9;margin-top:18px}
+
+    /* ========================================================
+       11. フッター
+       ======================================================== */
+    footer{padding:60px 24px 30px;background:#2C3E50;color:#CBD5E1}
+    .ft-wrap{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
+    .ft-brand .logo{color:#fff;margin-bottom:10px}
+    .ft-mission{font-size:.9rem;line-height:1.7;color:#9CA3AF;margin-bottom:14px}
+    .ft-col h5{color:#fff;font-size:.95rem;margin-bottom:10px;font-weight:700}
+    .ft-col ul{list-style:none;font-size:.9rem;line-height:2}
+    .ft-col a{color:#CBD5E1}
+    .ft-col a:hover{color:var(--primary)}
+    .ft-bottom{max-width:var(--max);margin:32px auto 0;padding-top:18px;border-top:1px solid #475569;font-size:.8rem;color:#94A3B8;text-align:center}
+    @media (max-width:768px){
+      .ft-wrap{grid-template-columns:1fr}
+    }
+
+    /* ========================================================
+       スクロールアニメーション
+       ======================================================== */
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease, transform .6s ease}
+    .reveal.in{opacity:1;transform:none}
+
+    @media (prefers-reduced-motion: reduce){
+      .reveal{opacity:1;transform:none;transition:none}
+      *{transition:none!important;animation:none!important}
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ============ Header ============ -->
+<header class="header">
+  <div class="wrap header-inner">
+    <a class="logo" href="#top"><span class="ic">🍙</span> こども食堂予約システム</a>
+    <nav class="nav">
+      <a href="#features">機能</a>
+      <a href="#poc">実証</a>
+      <a href="#pricing">料金</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact" class="btn btn-primary btn-sm">無料で試す</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ 1. Hero ============ -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <span class="hero-badge">🍙 ぽかぽか食堂で本番稼働中</span>
+    <h1>
+      LINEグループ予約から、<br>
+      <span class="accent">卒業</span>しませんか。
+    </h1>
+    <p class="hero-sub">月¥2,980で、利用者のプライバシーを守る、<br class="br">こども食堂専用の予約システム。</p>
+    <p class="hero-mini">— こども食堂を、地域のセーフティネットの入口に。</p>
+    <div class="hero-cta">
+      <a href="#contact" class="btn btn-primary btn-lg">30日間 無料で試す</a>
+      <a href="../?tenant=DEFAULT" class="btn btn-secondary btn-lg" target="_blank" rel="noopener">実際に触ってみる</a>
+    </div>
+    <div class="hero-trust">
+      <span>導入最短1日</span>
+      <span>サーバー不要</span>
+      <span>月額¥0プランあり</span>
+      <span>いつでも解約OK</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. 共感喚起 ============ -->
+<section class="reveal">
+  <div class="wrap">
+    <h2 class="h2">こんな <span class="acc">なやみ</span>、ありませんか？</h2>
+    <p class="lead">こども食堂の現場で、よく耳にする声をまとめました。</p>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pic">😣</div>
+        <h3>LINEグループで他の家族の予約が、丸見え</h3>
+        <p>個人情報・人数・キャンセル理由まで、利用者全員から見えてしまう。</p>
+      </div>
+      <div class="pain-card">
+        <div class="pic">📝</div>
+        <h3>電話と紙のキャンセル管理が、もう限界</h3>
+        <p>「予約したっけ？」の問い合わせ対応、誰が来るか当日まで分からない。</p>
+      </div>
+      <div class="pain-card">
+        <div class="pic">🤝</div>
+        <h3>常連さんとの関係性を、活かしきれない</h3>
+        <p>何回目の来場か、アレルギーは何か、毎回ゼロから聞き直し。</p>
+      </div>
+      <div class="pain-card">
+        <div class="pic">💸</div>
+        <h3>LINE有料版は¥5,000、ちょっと高い</h3>
+        <p>機能は欲しい、でもこども食堂の予算で月5,000円は厳しい。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. 解決策 ============ -->
+<section class="reveal" id="features">
+  <div class="wrap">
+    <h2 class="h2">こども食堂の <span class="acc">ためだけ</span> に、設計しました。</h2>
+    <p class="lead">全部入りで月¥2,980。「予約管理」の悩みを、まるごと引き受けます。</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="ic">📅</div>
+        <h3>ワンタッチ予約</h3>
+        <p>LINE 友だち追加から、3ステップで予約完了。スマホ最適化済み。</p>
+      </div>
+      <div class="feat-card">
+        <div class="ic">🔒</div>
+        <h3>プライバシー完全保護</h3>
+        <p>メールOTP個別認証。他の利用者の情報は一切見えません。</p>
+      </div>
+      <div class="feat-card">
+        <div class="ic">📊</div>
+        <h3>利用者マスタ自動集計</h3>
+        <p>来場回数・初回・前回・アレルギー履歴を自動で記録。リピーター可視化。</p>
+      </div>
+      <div class="feat-card">
+        <div class="ic">📧</div>
+        <h3>自動リマインダー</h3>
+        <p>前日18時に自動で「明日お待ちしています」メール送信。</p>
+      </div>
+      <div class="feat-card">
+        <div class="ic">❌</div>
+        <h3>重複予約の自動防止</h3>
+        <p>同日重複・連投・迷惑行為を3レベルで自動検出してブロック。</p>
+      </div>
+      <div class="feat-card">
+        <div class="ic">📋</div>
+        <h3>管理ダッシュボード</h3>
+        <p>予約サマリ・棒グラフ・CSV出力。スプレッドシートで一元管理。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. PoC ============ -->
+<section class="reveal poc" id="poc">
+  <div class="wrap">
+    <h2 class="h2">すでに <span class="acc">動いています</span>。</h2>
+    <p class="lead">福島県のこども食堂「ぽかぽか食堂」が、実証PoCとして稼働中。</p>
+    <div class="poc-row">
+      <div class="poc-left">
+        <h3>「予約管理が、こんなにラクになるとは」</h3>
+        <p>2026年5月稼働開始。利用者は LINE で友だち追加 → メール認証 → 1分で予約完了。</p>
+        <p>運営者はスプレッドシートだけで予約管理・キャンセル待ち繰り上げ・CSVダウンロード可能。</p>
+        <div class="poc-stats">
+          <div class="poc-stat"><span class="v num-en">10</span><span class="l">画面</span></div>
+          <div class="poc-stat"><span class="v num-en">3</span><span class="l">分で予約</span></div>
+          <div class="poc-stat"><span class="v num-en">¥0</span><span class="l">月額コスト</span></div>
+        </div>
+        <div class="poc-cta">
+          <a href="../?tenant=DEFAULT" target="_blank" rel="noopener" class="btn btn-primary">📅 実際に触ってみる</a>
+          <a href="https://line.me/R/ti/p/@533dgghw" target="_blank" rel="noopener" class="btn btn-line">📱 LINE で友だち追加</a>
+        </div>
+      </div>
+      <div class="poc-mock">
+        <div class="poc-mock-frame" aria-label="ぽかぽか食堂アプリのモックアップ">
+          <div class="icn">📱</div>
+          <div class="lbl">ぽかぽか食堂<br>予約フォーム<br>(スクリーンショット<br>差し替え予定)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. 競合比較 ============ -->
+<section class="reveal">
+  <div class="wrap">
+    <h2 class="h2">他のしくみと、<span class="acc">比べてみました</span>。</h2>
+    <p class="lead">こども食堂の現場が抱える「ちょうど良い」を、初めて満たすサービス。</p>
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th></th>
+            <th>LINEグループ</th>
+            <th>Googleフォーム</th>
+            <th class="us">本サービス<br><small>Standard</small></th>
+            <th>LINE有料版</th>
+            <th>専用SaaS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>月額</td>
+            <td>¥0</td>
+            <td>¥0</td>
+            <td class="us">¥2,980</td>
+            <td>¥5,000</td>
+            <td>¥10,000〜</td>
+          </tr>
+          <tr>
+            <td>予約管理の自動化</td>
+            <td><span class="mark-no">×</span> 手動</td>
+            <td><span class="mark-mid">△</span> 半自動</td>
+            <td class="us"><span class="mark-yes">◎</span></td>
+            <td><span class="mark-no">×</span></td>
+            <td><span class="mark-yes">◎</span></td>
+          </tr>
+          <tr>
+            <td>プライバシー保護</td>
+            <td><span class="mark-no">×</span></td>
+            <td><span class="mark-mid">△</span></td>
+            <td class="us"><span class="mark-yes">◎</span></td>
+            <td><span class="mark-yes">◎</span></td>
+            <td><span class="mark-yes">◎</span></td>
+          </tr>
+          <tr>
+            <td>LINE連携</td>
+            <td><span class="mark-yes">◎</span></td>
+            <td><span class="mark-no">×</span></td>
+            <td class="us"><span class="mark-yes">◎</span></td>
+            <td><span class="mark-yes">◎</span></td>
+            <td><span class="mark-mid">△</span></td>
+          </tr>
+          <tr>
+            <td>こども食堂特化</td>
+            <td><span class="mark-no">×</span></td>
+            <td><span class="mark-no">×</span></td>
+            <td class="us"><span class="mark-yes">◎</span></td>
+            <td><span class="mark-no">×</span></td>
+            <td><span class="mark-no">×</span></td>
+          </tr>
+          <tr>
+            <td>導入の手軽さ</td>
+            <td><span class="mark-yes">◎</span></td>
+            <td><span class="mark-yes">◎</span></td>
+            <td class="us"><span class="mark-yes">◎</span></td>
+            <td><span class="mark-mid">△</span></td>
+            <td><span class="mark-no">×</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. 料金プラン ============ -->
+<section class="reveal" id="pricing">
+  <div class="wrap">
+    <h2 class="h2">あなたの食堂に <span class="acc">ちょうど</span> 良いプランを。</h2>
+    <p class="lead">月20予約のお試しから、社会包摂機能つきの上位プランまで。</p>
+    <div class="plans">
+
+      <div class="plan">
+        <div class="plan-name">Free</div>
+        <div class="plan-target">お試し30日間</div>
+        <div class="plan-price"><span class="num-en">¥0</span><small>/月</small></div>
+        <div class="plan-quota">月 20予約 / メール 100通</div>
+        <ul class="plan-feat">
+          <li>基本予約・OTP認証</li>
+          <li>スプレッドシート連携</li>
+          <li class="disabled">LINE連携</li>
+          <li class="disabled">リマインダー</li>
+        </ul>
+        <a href="#contact" class="btn btn-secondary">無料で試す</a>
+      </div>
+
+      <div class="plan popular">
+        <span class="plan-badge">★ 最も人気</span>
+        <div class="plan-name">Standard</div>
+        <div class="plan-target">こども食堂運営者向け</div>
+        <div class="plan-price"><span class="num-en">¥2,980</span><small>/月</small></div>
+        <div class="plan-quota">月 200予約 / メール 1,000通</div>
+        <ul class="plan-feat">
+          <li>LINE Bot基本連携</li>
+          <li>自動リマインダー</li>
+          <li>利用者マスタ・履歴</li>
+          <li>CSVダウンロード</li>
+          <li>管理ダッシュボード</li>
+        </ul>
+        <a href="#contact" class="btn btn-primary">このプランを選ぶ</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Social</div>
+        <div class="plan-target">大規模食堂・社協向け</div>
+        <div class="plan-price"><span class="num-en">¥9,800</span><small>/月</small></div>
+        <div class="plan-quota">月 500予約 / メール 5,000通</div>
+        <ul class="plan-feat">
+          <li>Standard 全機能</li>
+          <li>AI 一次相談 Bot</li>
+          <li>公的リソース誘導</li>
+          <li>困窮シグナル検知</li>
+          <li>寄付・支援動線</li>
+          <li>多言語対応</li>
+        </ul>
+        <a href="#contact" class="btn btn-secondary">相談する</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-target">自治体・社協直接契約</div>
+        <div class="plan-price"><span class="num-en">¥19,800</span><small>〜/月</small></div>
+        <div class="plan-quota">予約・メール 無制限</div>
+        <ul class="plan-feat">
+          <li>Social 全機能</li>
+          <li>複数店舗統合</li>
+          <li>行政連携 API</li>
+          <li>カスタム開発</li>
+          <li>補助金導入支援</li>
+        </ul>
+        <a href="#contact" class="btn btn-secondary">お問い合わせ</a>
+      </div>
+
+    </div>
+    <p class="lead" style="margin-top:36px;font-size:.95rem">
+      ※ 14日間無料トライアル。いつでも1クリックで解約可。料金は税抜です。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 7. 使い方フロー ============ -->
+<section class="reveal">
+  <div class="wrap">
+    <h2 class="h2">導入は <span class="acc">3ステップ</span>。</h2>
+    <p class="lead">最短1日で稼働開始。プログラミング知識不要。</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step">1</div>
+        <div class="ic">📩</div>
+        <h4>無料体験を申し込む</h4>
+        <p>メール or LINE で「使ってみたい」とご連絡。30分のオンライン相談無料。</p>
+      </div>
+      <div class="flow-step">
+        <div class="step">2</div>
+        <div class="ic">⚙️</div>
+        <h4>初期設定（30分〜2時間）</h4>
+        <p>店舗名・開催日程・管理者メールを設定。プログラミング知識不要。</p>
+      </div>
+      <div class="flow-step">
+        <div class="step">3</div>
+        <div class="ic">🚀</div>
+        <h4>稼働開始 → LINEで案内</h4>
+        <p>専用LINE公式アカウントとフォームURL。利用者に共有するだけ。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. 社会的意義 ============ -->
+<section class="reveal">
+  <div class="wrap">
+    <div class="social-sec">
+      <h2 class="h2">こども食堂を、<br><span class="acc">地域のセーフティネット</span> の入口に。</h2>
+      <p class="lead">予約管理だけで終わらない。Social プランで、こども食堂は <strong>「相談・支援」の窓口</strong> になります。</p>
+      <div class="social-grid">
+        <div class="social-card">
+          <div class="ic">🤖</div>
+          <h4>AI一次相談Bot</h4>
+          <p>子育てや学校の悩みに、24時間 一次応答。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">🗺️</div>
+          <h4>公的リソース誘導</h4>
+          <p>自治体・NPO・専門家窓口へつなぐ。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">📈</div>
+          <h4>困窮シグナル検知</h4>
+          <p>利用頻度の変化から、必要な支援を察知。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">💝</div>
+          <h4>寄付・支援動線</h4>
+          <p>食材・現金・ふるさと納税で支援者と接続。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">📚</div>
+          <h4>学習支援連携</h4>
+          <p>無料塾・オンライン学習をご案内。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">📋</div>
+          <h4>制度申請ガイド</h4>
+          <p>就学援助・児童扶養手当の申請手順案内。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">🌍</div>
+          <h4>多言語対応</h4>
+          <p>やさしい日本語・外国ルーツ家庭向け。</p>
+        </div>
+        <div class="social-card">
+          <div class="ic">🥕</div>
+          <h4>食材調達連携</h4>
+          <p>フードバンク・地域農家との在庫マッチング。</p>
+        </div>
+      </div>
+      <p class="social-note">こども家庭庁・自治体施策とも整合する設計。Phase 4 で本実装予定。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9. FAQ ============ -->
+<section class="reveal" id="faq">
+  <div class="wrap">
+    <h2 class="h2">よくある <span class="acc">ご質問</span></h2>
+    <p class="lead">導入前にいただくお問い合わせをまとめました。</p>
+    <div class="faq-list">
+      <details class="faq">
+        <summary>導入にどれくらい時間がかかりますか？</summary>
+        <div class="a">最短1日で稼働開始できます。スプレッドシート作成 → Apps Script 設定 → LINE公式アカウント連携 → フロント公開、まで合計2〜3時間が標準。私たちが導入時のオンラインサポートを無料で行います。</div>
+      </details>
+      <details class="faq">
+        <summary>既存のスプレッドシート運用と連携できますか？</summary>
+        <div class="a">はい。本サービスは Google スプレッドシート上で動作するため、過去の予約データの取り込み・既存運用との並行も可能です。データ移行はサポートします。</div>
+      </details>
+      <details class="faq">
+        <summary>セキュリティは大丈夫ですか？</summary>
+        <div class="a">Google Workspace の認証基盤を利用し、OTP認証・セッショントークン・LockService 排他制御・全API認可レイヤーを実装。利用者データはテナントごとに完全分離されています。</div>
+      </details>
+      <details class="faq">
+        <summary>LINEで使えますか？</summary>
+        <div class="a">はい。LINE 公式アカウントの友だち追加 → リッチメニューから 予約・マイ予約・お問い合わせ がワンタップで操作できます。LIFF（LINE Front-end Framework）によりメール認証スキップも可能。</div>
+      </details>
+      <details class="faq">
+        <summary>途中で解約できますか？</summary>
+        <div class="a">いつでも1クリックで解約可能。解約後60日間はデータ凍結保存、90日後に完全削除します。再開もスムーズです。</div>
+      </details>
+      <details class="faq">
+        <summary>個人情報の取り扱いは？</summary>
+        <div class="a">店舗ごとにデータ完全分離。第三者提供は一切行いません。利用者の個人情報は店舗運営者と当社のみアクセス可。詳細はプライバシーポリシーをご覧ください。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10. 最終CTA ============ -->
+<section class="reveal" id="contact">
+  <div class="wrap">
+    <div class="cta">
+      <h2>こども食堂の予約管理を、<br>もっと、やさしく。</h2>
+      <p>まずは30日間 無料体験。導入相談オンラインミーティング無料。</p>
+      <div class="cta-row">
+        <a href="mailto:hdxrope@gmail.com?subject=【こども食堂予約システム】30日無料体験申込&body=お問い合わせありがとうございます。下記をご記入の上、送信してください。%0A%0A・食堂名:%0A・運営者名:%0A・連絡先:%0A・現在の予約管理方法:%0A・ご質問:" class="btn btn-primary btn-lg">📩 30日間 無料で試す</a>
+        <a href="mailto:hdxrope@gmail.com?subject=【こども食堂予約システム】お問い合わせ" class="btn btn-secondary btn-lg">💬 お問い合わせ</a>
+      </div>
+      <div class="cta-row">
+        <a href="https://line.me/R/ti/p/@533dgghw" target="_blank" rel="noopener" class="btn btn-line btn-lg">📱 LINEで相談する</a>
+      </div>
+      <div class="cta-meta">📧 hdxrope@gmail.com ／ 📱 LINE: @533dgghw</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer>
+  <div class="ft-wrap">
+    <div class="ft-brand">
+      <div class="logo"><span class="ic">🍙</span> こども食堂予約システム</div>
+      <p class="ft-mission">運営：AIの町医者（高橋秀夫）<br>「地域 × IT × 社会セクター」で、こども食堂を地域のセーフティネットに変えるプロジェクト。</p>
+    </div>
+    <div class="ft-col">
+      <h5>ドキュメント</h5>
+      <ul>
+        <li><a href="../docs/SYSTEM_OVERVIEW.md">システム概要</a></li>
+        <li><a href="../docs/USER_GUIDE.md">利用者ガイド</a></li>
+        <li><a href="../docs/ADMIN_OPERATION_MANUAL.md">運用マニュアル</a></li>
+        <li><a href="../docs/INITIAL_SETUP.md">導入手順</a></li>
+      </ul>
+    </div>
+    <div class="ft-col">
+      <h5>お問い合わせ</h5>
+      <ul>
+        <li><a href="mailto:hdxrope@gmail.com">hdxrope@gmail.com</a></li>
+        <li><a href="https://line.me/R/ti/p/@533dgghw" target="_blank" rel="noopener">LINE @533dgghw</a></li>
+        <li><a href="https://github.com/hideo-t/pokapoka" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="../?tenant=DEFAULT" target="_blank" rel="noopener">ぽかぽか食堂を見る</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    © 2026 AIの町医者 / 高橋秀夫. All rights reserved.
+  </div>
+</footer>
+
+<script>
+  // スクロール時のフェードイン
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
